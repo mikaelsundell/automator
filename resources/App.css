@@ -1,0 +1,116 @@
+/* Copyright 2022-present Contributors to the colorpicker project.
+ * SPDX-License-Identifier: BSD-3-Clause
+ * https://github.com/mikaelsundell/colorpicker
+ */
+
+/* Top-level widgets */
+
+QMainWindow,
+QDialog
+{
+    background-color: hsl(220,55%,4%);
+}
+
+/* QWidgets widgets */
+
+QWidget#presetBar
+{
+    background-color: hsl(214, 24%, 6%);
+    border-radius: 5px;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+}
+
+QWidget#presetWidget
+{
+    background-color: hsl(220, 25%, 5%);
+    border-radius: 5px;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+}
+
+QWidget#filedropBar
+{
+    background-color: hsl(214, 24%, 6%);
+    border-radius: 5px;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+}
+
+QWidget#filedropWidget
+{
+    background-color: hsl(220, 25%, 5%);
+    border-radius: 5px;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+}
+
+/* QFrame widgets */
+
+QFrame#view
+{
+    border: 1 solid hsl(216,7,29);
+}
+
+/* QToolButton widgets */
+
+QToolButton#toggleActive
+{
+    padding: 2px;
+}
+
+QToolButton#togglePin
+{
+    padding: 2px;
+}
+
+QToolButton#togglePreset
+{
+    padding: 2px;
+    background-color: transparent;
+}
+
+QToolButton#toggleFiledrop
+{
+    padding: 2px;
+    background-color: transparent;
+}
+
+/* QSlider widgets */
+
+QSlider::groove:horizontal
+{
+    height: 5px;
+    background-color: hsl(220, 7%, 16%);
+    border: 1px solid black;
+    border-radius: 3px;
+    margin: 2px 0;
+}
+
+QSlider::sub-page:horizontal
+{
+    height: 5px;
+    background-color: hsl(222, 6%, 31%);
+    border: 1px solid black;
+    border-radius: 4px;
+    margin: 2px 0;
+}
+
+QSlider::handle:horizontal
+{
+    background: hsl(0, 0%, 59%);
+    width: 13px;
+    margin: -4px 0;
+    border-radius: 6px;
+}
+
+/* Custom widgets */
+
+QWidget#filedrop
+{
+    height: 5px;
+    border: 2px dashed rgb(106, 106, 106); /* Updated border thickness to 10px and style to dashed */
+    border-radius: 20px; /* Adjusted for more pronounced rounded corners */
+    margin: 2px 0;
+    background-color: hsl(214, 24%, 6%);
+}

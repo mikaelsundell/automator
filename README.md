@@ -1,7 +1,7 @@
-Readme for developtool
+Readme for automator
 ==================
 
-[![License](https://img.shields.io/badge/license-BSD%203--Clause-blue.svg?style=flat-square)](https://github.com/mikaelsundell/logctool/blob/master/README.md)
+[![License](https://img.shields.io/badge/license-BSD%203--Clause-blue.svg?style=flat-square)](https://github.com/mikaelsundell/automator/blob/master/README.md)
 
 Introduction
 ------------
@@ -29,7 +29,7 @@ Packaging
 The `macdeploy.sh` script will deploy mac bundle to dmg including dependencies.
 
 ```shell
-./macdeploy.sh -e <path>/logctool -d <path>/dependencies -p <path>/path to deploy
+./macdeploy.sh -e <path>/automator -d <path>/dependencies -p <path>/path to deploy
 ```
 
 Dependencies

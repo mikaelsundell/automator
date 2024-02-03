@@ -1,0 +1,10 @@
+<RCC>
+  <qresource prefix="icons">
+    <file>resources/AppIcon.png</file>
+    <file>resources/Collapse.png</file>
+    <file>resources/Expand.png</file>
+  </qresource>
+   <qresource prefix="files">
+    <file>resources/Copyright.txt</file>
+  </qresource>
+</RCC>
