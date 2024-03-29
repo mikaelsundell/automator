@@ -76,6 +76,15 @@ QToolButton#toggleFiledrop
     background-color: transparent;
 }
 
+
+/* QLineEdit widgets */
+
+QLineEdit
+{
+    border: 1px solid hsl(225, 3%, 29%);
+    background-color: hsl(216, 6%, 15%);
+}
+
 /* QSlider widgets */
 
 QSlider::groove:horizontal
@@ -106,11 +115,11 @@ QSlider::handle:horizontal
 
 /* Custom widgets */
 
-QWidget#filedrop
-{
-    height: 5px;
-    border: 2px dashed rgb(106, 106, 106); /* Updated border thickness to 10px and style to dashed */
-    border-radius: 20px; /* Adjusted for more pronounced rounded corners */
-    margin: 2px 0;
+Filedrop {
     background-color: hsl(214, 24%, 6%);
+}
+
+Filedrop[dragging="true"] {
+    border: 2px dashed hsl(225, 3%, 29%);
+    background-color: hsl(216, 6%, 15%);
 }

@@ -8,7 +8,7 @@ set( project_name "Automator" )
 project( ${project_name} )
 
 # packages
-set (qt6_modules Core Gui Widgets)
+set (qt6_modules Core Concurrent Gui Widgets)
 find_package(Qt6 COMPONENTS ${qt6_modules} CONFIG REQUIRED)
 set (CMAKE_AUTOMOC ON)
 set (CMAKE_AUTORCC ON)
@@ -21,11 +21,24 @@ set (app_sources
     automator.cpp
     eventfilter.h
     eventfilter.cpp
+    filedrop.h
+    filedrop.cpp
+    job.h
+    job.cpp
+    log.h
+    log.cpp
     mac.h
     mac.mm
     main.cpp
+    preset.h
+    preset.cpp
+    process.h
+    process.cpp
+    queue.h
+    queue.cpp
     about.ui
     automator.ui
+    log.ui
     automator.qrc
 )
 
@@ -69,11 +82,11 @@ if (APPLE)
     # code signing
     if (SIGN_CODE)
         if (CODE_SIGN_IDENTITY STREQUAL "" OR DEVELOPMENT_TEAM_ID STREQUAL "")
-            message (FATAL_ERROR "Code signing is enabled, but CODE_SIGN_IDENTITY or DEVELOPMENT_TEAM_ID is not set.")
+            message FATAL_ERROR "Code signing is enabled, but CODE_SIGN_IDENTITY or DEVELOPMENT_TEAM_ID is not set.")
         else ()
-            message ("Code signing enabled for Xcode")
-            message ("  Sign identify: ${CODE_SIGN_IDENTITY}")
-            message ("  Development team: ${DEVELOPMENT_TEAM_ID}")
+            message("Code signing enabled for Xcode")
+            message("  Sign identify: ${CODE_SIGN_IDENTITY}")
+            message("  Development team: ${DEVELOPMENT_TEAM_ID}")
         endif()
         set_target_properties(${project_name} PROPERTIES
             XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "${CODE_SIGN_IDENTITY}"
@@ -87,7 +100,7 @@ if (APPLE)
     target_compile_options (${project_name} PRIVATE -Wno-deprecated-register)
     target_include_directories (${project_name} PRIVATE ${LCMS2_INCLUDE_DIR})
     target_link_libraries (${project_name} 
-        Qt6::Core Qt6::Gui Qt6::Widgets
+        Qt6::Core Qt6::Concurrent Qt6::Gui Qt6::Widgets
         "-framework CoreFoundation"
         "-framework AppKit")
 else ()
