@@ -3,8 +3,15 @@
 // https://github.com/mikaelsundell/automator
 
 #pragma once
+#include <QWidget>
 
 namespace mac
 {
-    void setupMac();
+    struct IccProfile {
+        int screenNumber;
+        QString displayProfileUrl;
+    };
+    void setDarkAppearance();
+    IccProfile grabIccProfile(WId wid);
+    QString grabIccProfileUrl(WId wid);
 }

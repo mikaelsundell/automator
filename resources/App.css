@@ -1,21 +1,63 @@
 /* Copyright 2022-present Contributors to the colorpicker project.
  * SPDX-License-Identifier: BSD-3-Clause
- * https://github.com/mikaelsundell/colorpicker
+ * https://github.com/mikaelsundell/automator
  */
 
 /* Top-level widgets */
-
 QMainWindow,
 QDialog
 {
-    background-color: hsl(220,55%,4%);
+    background-color: hsl(220, 30%, 6%);
+}
+
+/* QCheckBox widgets */
+QCheckBox
+{
+    spacing: 5px;
+}
+
+QCheckBox::indicator {
+    background-color: hsl(220, 8%, 15%);
+    width: 20px;
+    height: 20px;
+}
+
+QCheckBox::indicator:checked {
+    image: url(":/icons/resources/Checkbox.png");
+}
+
+/* QComboBox widgets */
+QComboBox
+{
+    background-color: hsl(220, 8%, 15%);
+    padding: 4px;
+    padding-left: 10px;
+    border-radius: 0px;
+}
+
+QComboBox::down-arrow {
+    image: url(":/icons/resources/Dropdown.png");
+    width: 12px;
+    height: 12px;
+}
+
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 16px;
+    right: 4px;
+    border: 0px;
+}
+
+/* QLabel widgets */
+QLabel#saveTo {
+    color: hsl(0, 0%, 80%);
 }
 
 /* QWidgets widgets */
-
 QWidget#presetBar
 {
-    background-color: hsl(214, 24%, 6%);
+    background-color: hsl(220, 30%, 12%);
     border-radius: 5px;
     border-bottom-left-radius: 0px;
     border-bottom-right-radius: 0px;
@@ -23,7 +65,7 @@ QWidget#presetBar
 
 QWidget#presetWidget
 {
-    background-color: hsl(220, 25%, 5%);
+    background-color: hsl(220, 30%, 8%);
     border-radius: 5px;
     border-top-left-radius: 0px;
     border-top-right-radius: 0px;
@@ -31,7 +73,7 @@ QWidget#presetWidget
 
 QWidget#filedropBar
 {
-    background-color: hsl(214, 24%, 6%);
+    background-color: hsl(220, 30%, 12%);
     border-radius: 5px;
     border-bottom-left-radius: 0px;
     border-bottom-right-radius: 0px;
@@ -39,31 +81,41 @@ QWidget#filedropBar
 
 QWidget#filedropWidget
 {
-    background-color: hsl(220, 25%, 5%);
+    background-color: hsl(220, 30%, 8%);
     border-radius: 5px;
     border-top-left-radius: 0px;
     border-top-right-radius: 0px;
 }
 
-/* QFrame widgets */
-
-QFrame#view
+/* QPushButton widgets */
+QPushButton
 {
-    border: 1 solid hsl(216,7,29);
+    color:  hsl(0, 0%, 80%);
+    background-color: 
+    QLinearGradient( 
+        x1: 0, y1: 0, x2: 0, y2: 1, 
+        stop: 0 hsl(220, 6%, 20%),
+        stop: 1.0 hsl(220, 6%, 24%)
+    );
+    height: 20px;        
+    border: 1px solid hsl(220, 3%, 33%);
+    border-radius: 0px;        
+    padding: 2px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+QPushButton:pressed
+{
+    background-color: 
+    QLinearGradient( 
+        x1: 0, y1: 0, x2: 0, y2: 1, 
+        stop: 0 hsl(220, 6%, 26%),
+        stop: 1.0 hsl(220, 6%, 30%)
+    );
 }
 
 /* QToolButton widgets */
-
-QToolButton#toggleActive
-{
-    padding: 2px;
-}
-
-QToolButton#togglePin
-{
-    padding: 2px;
-}
-
 QToolButton#togglePreset
 {
     padding: 2px;
@@ -76,21 +128,17 @@ QToolButton#toggleFiledrop
     background-color: transparent;
 }
 
-
-/* QLineEdit widgets */
-
-QLineEdit
+QToolButton#showSaveto
 {
-    border: 1px solid hsl(225, 3%, 29%);
-    background-color: hsl(216, 6%, 15%);
+    padding: 2px;
+    background-color: transparent;
 }
 
 /* QSlider widgets */
-
 QSlider::groove:horizontal
 {
     height: 5px;
-    background-color: hsl(220, 7%, 16%);
+    background-color: hsl(220, 8%, 15%);
     border: 1px solid black;
     border-radius: 3px;
     margin: 2px 0;
@@ -99,7 +147,7 @@ QSlider::groove:horizontal
 QSlider::sub-page:horizontal
 {
     height: 5px;
-    background-color: hsl(222, 6%, 31%);
+    background-color: hsl(220, 6%, 30%);
     border: 1px solid black;
     border-radius: 4px;
     margin: 2px 0;
@@ -116,10 +164,10 @@ QSlider::handle:horizontal
 /* Custom widgets */
 
 Filedrop {
-    background-color: hsl(214, 24%, 6%);
+    background-color: hsl(220, 30%, 6%);
 }
 
 Filedrop[dragging="true"] {
     border: 2px dashed hsl(225, 3%, 29%);
-    background-color: hsl(216, 6%, 15%);
+    background-color: hsl(220, 30%, 6%);
 }

@@ -6,7 +6,7 @@ Readme for automator
 Introduction
 ------------
 
-automator is a set of utilities for batch processing files
+Automator is a set of utilities for batch processing files
 
 Documentation
 -------------

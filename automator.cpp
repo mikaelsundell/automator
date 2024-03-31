@@ -4,9 +4,11 @@
 
 #include "automator.h"
 #include "eventfilter.h"
+#include "icctransform.h"
 #include "log.h"
 #include "mac.h"
 #include "preset.h"
+#include "question.h"
 #include "queue.h"
 
 #include <QAction>
@@ -15,7 +17,9 @@
 #include <QFileDialog>
 #include <QDesktopServices>
 #include <QList>
+#include <QMessageBox>
 #include <QPointer>
+#include <QSettings>
 #include <QSharedPointer>
 #include <QStandardPaths>
 #include <QWindow>
@@ -32,15 +36,24 @@ class AutomatorPrivate : public QObject
         AutomatorPrivate();
         void init();
         void stylesheet();
+        void profile();
+        void presets();
+        void activate();
+        void deactivate();
         bool eventFilter(QObject* object, QEvent* event);
-        
+        void loadSettings();
+        void saveSettings();
+    
     public Q_SLOTS:
         void togglePreset();
         void toggleFiledrop();
         void showLog();
         void run(const QList<QString>& files);
         void jobProcessed(const QUuid& uuid);
+        void refresh();
+        void openPresetfrom();
         void openSaveto();
+        void showSaveto();
         void about();
         void openGithubReadme();
         void openGithubIssues();
@@ -77,6 +90,8 @@ class AutomatorPrivate : public QObject
         int width;
         int height;
         QSize size;
+        QString presetfrom;
+        QString saveto;
         QMap<QString, QList<QUuid>> processedfiles;
         QPointer<Automator> window;
         QScopedPointer<Log> log;
@@ -96,7 +111,13 @@ AutomatorPrivate::AutomatorPrivate()
 void
 AutomatorPrivate::init()
 {
-    mac::setupMac();
+    mac::setDarkAppearance();
+    // icc profile
+    ICCTransform* transform = ICCTransform::instance();
+    QDir resources(QApplication::applicationDirPath() + "/../Resources");
+    QString inputProfile = resources.filePath("sRGB2014.icc"); // built-in Qt input profile
+    transform->setInputProfile(inputProfile);
+    profile();
     // ui
     ui.reset(new Ui_Automator());
     ui->setupUi(window);
@@ -105,26 +126,14 @@ AutomatorPrivate::init()
     // log
     log.reset(new Log(window.data()));
     log->setModal(false);
+    // settings
+    loadSettings();
     // layout
     // needed to keep .ui fixed size from setupUi
     window->setFixedSize(window->size());
     // presets
-    QDir presets(QApplication::applicationDirPath() + "/../Presets");
-    for(QFileInfo presetFile : presets.entryInfoList( QStringList( "*.json" )))
-    {
-        QSharedPointer<Preset> preset(new Preset());
-        if (preset->read(presetFile.absoluteFilePath()))
-        {
-            ui->preset->addItem(preset->name(), QVariant::fromValue(preset));
-        }
-    }
-    
-    ui->saveto->setText(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
-    ui->saveas->setText("%filename%.%extension%");
-    ui->filename->setText("filename.extension");
-    
-    // stylesheet
-    stylesheet();
+    presets();
+    ui->saveTo->setText(saveto);
     // event filter
     window->installEventFilter(this);
     // display filter
@@ -138,14 +147,19 @@ AutomatorPrivate::init()
     connect(ui->toggleFiledrop, &QPushButton::pressed, this, &AutomatorPrivate::toggleFiledrop);
     connect(presetfilter.data(), &Eventfilter::pressed, ui->togglePreset, &QPushButton::click);
     connect(filedropfilter.data(), &Eventfilter::pressed, ui->toggleFiledrop, &QPushButton::click);
+    connect(ui->refresh, &QPushButton::clicked, this, &AutomatorPrivate::refresh);
+    connect(ui->openPresetfrom, &QPushButton::clicked, this, &AutomatorPrivate::openPresetfrom);
+    connect(ui->openSaveto, &QPushButton::clicked, this, &AutomatorPrivate::openSaveto);
+    connect(ui->showSaveto, &QPushButton::clicked, this, &AutomatorPrivate::showSaveto);
     connect(ui->filedrop, &Filedrop::filesDropped, this, &AutomatorPrivate::run);
     connect(ui->log, &QPushButton::clicked, this, &AutomatorPrivate::showLog);
-    connect(ui->openSaveto, &QPushButton::clicked, this, &AutomatorPrivate::openSaveto);
     connect(ui->about, &QAction::triggered, this, &AutomatorPrivate::about);
     connect(ui->openGithubReadme, &QAction::triggered, this, &AutomatorPrivate::openGithubReadme);
     connect(ui->openGithubIssues, &QAction::triggered, this, &AutomatorPrivate::openGithubIssues);
     connect(queue.data(), &Queue::jobProcessed, this, &AutomatorPrivate::jobProcessed);
     size = window->size();
+    // stylesheet
+    stylesheet();
     // debug
     #ifdef QT_DEBUG
         QMenu* menu = ui->menubar->addMenu("Debug");
@@ -166,13 +180,112 @@ AutomatorPrivate::stylesheet()
     QDir resources(QApplication::applicationDirPath());
     QFile stylesheet(resources.absolutePath() + "/../Resources/App.css");
     stylesheet.open(QFile::ReadOnly);
-    qApp->setStyleSheet(stylesheet.readAll());
+    QString qss = stylesheet.readAll();
+    QRegularExpression hslRegex("hsl\\(\\s*(\\d+)\\s*,\\s*(\\d+)%\\s*,\\s*(\\d+)%\\s*\\)");
+    QString transformqss = qss;
+    QRegularExpressionMatchIterator i = hslRegex.globalMatch(transformqss);
+    while (i.hasNext()) {
+        QRegularExpressionMatch match = i.next();
+        if (match.hasMatch()) {
+            if (!match.captured(1).isEmpty() &&
+                !match.captured(2).isEmpty() &&
+                !match.captured(3).isEmpty())
+            {
+                int h = match.captured(1).toInt();
+                int s = match.captured(2).toInt();
+                int l = match.captured(3).toInt();
+                QColor color = QColor::fromHslF(h / 360.0f, s / 100.0f, l / 100.0f);
+                // icc profile
+                ICCTransform* transform = ICCTransform::instance();
+                color = transform->map(color.rgb());
+                QString hsl = QString("hsl(%1, %2%, %3%)")
+                                .arg(color.hue() == -1 ? 0 : color.hue())
+                                .arg(static_cast<int>(color.hslSaturationF() * 100))
+                                .arg(static_cast<int>(color.lightnessF() * 100));
+                
+                transformqss.replace(match.captured(0), hsl);
+            }
+        }
+    }
+    qApp->setStyleSheet(transformqss);
+}
+
+void
+AutomatorPrivate::profile()
+{
+    QString outputProfile = mac::grabIccProfileUrl(window->winId());
+    // icc profile
+    ICCTransform* transform = ICCTransform::instance();
+    transform->setOutputProfile(outputProfile);
+}
+
+void
+AutomatorPrivate::presets()
+{
+    ui->presets->clear();
+    QDir presets(presetfrom);
+    QFileInfoList presetfiles = presets.entryInfoList(QStringList("*.json"));
+    if (presetfiles.count() > 0) {
+        for(QFileInfo presetfile : presetfiles) {
+            QSharedPointer<Preset> preset(new Preset());
+            if (preset->read(presetfile.absoluteFilePath())) {
+                ui->presets->addItem(preset->name(), QVariant::fromValue(preset));
+            }
+        }
+        activate();
+    } else {
+        ui->presets->addItem("No presets found");
+        deactivate();
+    }
+}
+
+void
+AutomatorPrivate::activate()
+{
+    ui->filedrop->setEnabled(true);
+    ui->fileprogress->setEnabled(true);
+}
+
+void
+AutomatorPrivate::deactivate()
+{
+    ui->filedrop->setEnabled(false);
+    ui->fileprogress->setEnabled(true);
 }
 
 bool
 AutomatorPrivate::eventFilter(QObject* object, QEvent* event)
 {
-    return false;
+    if (event->type() == QEvent::ScreenChangeInternal) {
+        profile();
+        stylesheet();
+    }
+    if (event->type() == QEvent::Close) {
+        if (Question::askQuestion(window.data(), "hello, world!")) {
+            saveSettings();
+        } else {
+            event->ignore();
+            return true;
+        }
+    }
+    return QObject::eventFilter(object, event);
+}
+
+void
+AutomatorPrivate::loadSettings()
+{
+    QString documents = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    QSettings settings(MACOSX_BUNDLE_GUI_IDENTIFIER, "Automator");
+    presetfrom = settings.value("presetFrom", documents).toString();
+    saveto = settings.value("saveTo", documents).toString();
+}
+
+void
+AutomatorPrivate::saveSettings()
+{
+    QSettings settings(MACOSX_BUNDLE_GUI_IDENTIFIER, "Automator");
+    settings.setValue("presetFrom", presetfrom);
+    settings.setValue("saveTo", saveto);
 }
 
 QString
@@ -197,6 +310,7 @@ AutomatorPrivate::replaceFile(const QString& file, const QFileInfo& inputinfo, c
 void
 AutomatorPrivate::run(const QList<QString>& files)
 {
+    /*
     QSharedPointer<Preset> preset = ui->preset->currentData().value<QSharedPointer<Preset>>();
     QString outputDir = ui->saveto->text();
     processedfiles.clear();
@@ -257,7 +371,7 @@ AutomatorPrivate::run(const QList<QString>& files)
                 //qDebug() << "Dependency not found for job: " << job->name();
             }
         }
-    }
+    }*/
 }
 
 void
@@ -276,17 +390,46 @@ AutomatorPrivate::jobProcessed(const QUuid& uuid)
 }
 
 void
+AutomatorPrivate::refresh()
+{
+    presets();
+}
+
+void
+AutomatorPrivate::openPresetfrom()
+{
+    QString dir = QFileDialog::getExistingDirectory(
+                    window.data(),
+                    tr("Open presets"),
+                    presetfrom,
+                    QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks
+    );
+    if (!dir.isEmpty()) {
+        presetfrom = dir;
+        presets();
+    }
+}
+
+void
 AutomatorPrivate::openSaveto()
 {
     QString dir = QFileDialog::getExistingDirectory(
                     window.data(),
-                    tr("Output directory"),
-                    ui->saveto->text(),
+                    tr("Open saveto"),
+                    presetfrom,
                     QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks
     );
     if (!dir.isEmpty()) {
-        ui->saveto->setText(dir);
+        saveto = dir;
+        ui->saveTo->setText(saveto);
     }
+}
+
+
+void
+AutomatorPrivate::showSaveto()
+{
+    QDesktopServices::openUrl(QUrl::fromLocalFile(saveto));
 }
 
 void

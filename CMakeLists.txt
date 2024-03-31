@@ -15,6 +15,8 @@ set (CMAKE_AUTORCC ON)
 set (CMAKE_AUTOUIC ON)
 set (CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+find_package( Lcms2 REQUIRED )
+
 # sources
 set (app_sources
     automator.h
@@ -23,6 +25,8 @@ set (app_sources
     eventfilter.cpp
     filedrop.h
     filedrop.cpp
+    icctransform.h
+    icctransform.cpp
     job.h
     job.cpp
     log.h
@@ -36,9 +40,12 @@ set (app_sources
     process.cpp
     queue.h
     queue.cpp
+    question.h
+    question.cpp
     about.ui
     automator.ui
     log.ui
+    question.ui
     automator.qrc
 )
 
@@ -76,13 +83,14 @@ if (APPLE)
     set_source_files_properties(${app_presets} PROPERTIES MACOSX_PACKAGE_LOCATION "Presets")
     add_executable (${project_name} MACOSX_BUNDLE ${app_sources} ${app_resources} ${app_presets})
     # definitions
+    add_definitions(-DMACOSX_BUNDLE_GUI_IDENTIFIER="${MACOSX_BUNDLE_GUI_IDENTIFIER}")
     add_definitions(-DMACOSX_BUNDLE_COPYRIGHT="${MACOSX_BUNDLE_COPYRIGHT}")
     add_definitions(-DMACOSX_BUNDLE_LONG_VERSION_STRING="${MACOSX_BUNDLE_LONG_VERSION_STRING}")
     add_definitions(-DGITHUBURL="https://github.com/mikaelsundell/automator")
     # code signing
     if (SIGN_CODE)
         if (CODE_SIGN_IDENTITY STREQUAL "" OR DEVELOPMENT_TEAM_ID STREQUAL "")
-            message FATAL_ERROR "Code signing is enabled, but CODE_SIGN_IDENTITY or DEVELOPMENT_TEAM_ID is not set.")
+            message( FATAL_ERROR "Code signing is enabled, but CODE_SIGN_IDENTITY or DEVELOPMENT_TEAM_ID is not set.")
         else ()
             message("Code signing enabled for Xcode")
             message("  Sign identify: ${CODE_SIGN_IDENTITY}")
@@ -101,6 +109,7 @@ if (APPLE)
     target_include_directories (${project_name} PRIVATE ${LCMS2_INCLUDE_DIR})
     target_link_libraries (${project_name} 
         Qt6::Core Qt6::Concurrent Qt6::Gui Qt6::Widgets
+        ${LCMS2_LIBRARY}
         "-framework CoreFoundation"
         "-framework AppKit")
 else ()
