@@ -70,7 +70,7 @@ if [ "$build_type" != "debug" ] && [ "$build_type" != "release" ] && [ "$build_t
     exit 1
 fi
 
-echo "Building Colorpicker for $build_type"
+echo "Building Automator for $build_type"
 echo "---------------------------------"
 
 # check if cmake is in the path
@@ -89,8 +89,8 @@ if ! [[ $(cmake --version | grep -o '[0-9]\+\(\.[0-9]\+\)*' | head -n1) < "3.28.
     exit 1;
 fi
 
-# build colorpicker
-build_colorpicker() {
+# build automator
+build_automator() {
     local build_type="$1"
 
     # cmake
@@ -124,7 +124,7 @@ build_colorpicker() {
     if [ "$deploy" == "ON" ]; then
         cmake --build . --config $xcode_type --parallel
 
-        dmg_file="$script_dir/Colorpicker_macOS${major_version}_${machine_arch}_${build_type}.dmg"
+        dmg_file="$script_dir/Automator_macOS${major_version}_${machine_arch}_${build_type}.dmg"
         if [ -f "$dmg_file" ]; then
             rm -f "$dmg_file"
         fi
@@ -132,7 +132,7 @@ build_colorpicker() {
         # deploy
         $script_dir/scripts/macdeploy.sh -b "$xcode_type/Automator.app" -m "$prefix/bin/macdeployqt"
         if [ "$sign_code" == "ON" ]; then
-            codesign --force --deep --sign "$code_sign_identity" --timestamp --options runtime "$xcode_type/Colorpicker.app"
+            codesign --force --deep --sign "$code_sign_identity" --timestamp --options runtime "$xcode_type/Automator.app"
         fi
 
         # deploydmg
@@ -145,8 +145,8 @@ build_colorpicker() {
 
 # build types
 if [ "$build_type" == "all" ]; then
-    build_colorpicker "debug"
-    build_colorpicker "release"
+    build_automator "debug"
+    build_automator "release"
 else
-    build_colorpicker "$build_type"
+    build_automator "$build_type"
 fi
