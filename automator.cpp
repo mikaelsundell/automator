@@ -7,6 +7,7 @@
 #include "icctransform.h"
 #include "log.h"
 #include "mac.h"
+#include "preferences.h"
 #include "preset.h"
 #include "question.h"
 #include "queue.h"
@@ -52,13 +53,15 @@ class AutomatorPrivate : public QObject
         void showLog();
         void run(const QList<QString>& files);
         void jobProcessed(const QUuid& uuid);
+        void addFiles();
         void refreshPreset();
         void openPreset();
         void openPresetfrom();
         void openSaveto();
         void showSaveto();
         void threadsChanged(int index);
-        void about();
+        void showAbout();
+        void showPreferences();
         void openGithubReadme();
         void openGithubIssues();
     
@@ -96,8 +99,11 @@ class AutomatorPrivate : public QObject
         QSize size;
         QString presetfrom;
         QString saveto;
+        QString filesfrom;
         QMap<QString, QList<QUuid>> processedfiles;
         QPointer<Automator> window;
+        QScopedPointer<About> about;
+        QScopedPointer<Preferences> preferences;
         QScopedPointer<Log> log;
         QScopedPointer<Eventfilter> presetfilter;
         QScopedPointer<Eventfilter> filedropfilter;
@@ -127,6 +133,10 @@ AutomatorPrivate::init()
     ui->setupUi(window);
     // queue
     queue.reset(new Queue());
+    // about
+    about.reset(new About(window.data()));
+    // preferences
+    preferences.reset(new Preferences(window.data()));
     // log
     log.reset(new Log(window.data()));
     log->setModal(false);
@@ -151,6 +161,7 @@ AutomatorPrivate::init()
     connect(ui->toggleFiledrop, &QPushButton::pressed, this, &AutomatorPrivate::toggleFiledrop);
     connect(presetfilter.data(), &Eventfilter::pressed, ui->togglePreset, &QPushButton::click);
     connect(filedropfilter.data(), &Eventfilter::pressed, ui->toggleFiledrop, &QPushButton::click);
+    connect(ui->addfiles, &QAction::triggered, this, &AutomatorPrivate::addFiles);
     connect(ui->refreshPreset, &QPushButton::clicked, this, &AutomatorPrivate::refreshPreset);
     connect(ui->openPreset, &QPushButton::clicked, this, &AutomatorPrivate::openPreset);
     connect(ui->openPresetfrom, &QPushButton::clicked, this, &AutomatorPrivate::openPresetfrom);
@@ -159,7 +170,8 @@ AutomatorPrivate::init()
     connect(ui->filedrop, &Filedrop::filesDropped, this, &AutomatorPrivate::run);
     connect(ui->threads, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &AutomatorPrivate::threadsChanged);
     connect(ui->log, &QPushButton::clicked, this, &AutomatorPrivate::showLog);
-    connect(ui->about, &QAction::triggered, this, &AutomatorPrivate::about);
+    connect(ui->about, &QAction::triggered, this, &AutomatorPrivate::showAbout);
+    connect(ui->preferences, &QAction::triggered, this, &AutomatorPrivate::showPreferences);
     connect(ui->openGithubReadme, &QAction::triggered, this, &AutomatorPrivate::openGithubReadme);
     connect(ui->openGithubIssues, &QAction::triggered, this, &AutomatorPrivate::openGithubIssues);
     connect(queue.data(), &Queue::jobProcessed, this, &AutomatorPrivate::jobProcessed);
@@ -258,6 +270,23 @@ AutomatorPrivate::deactivate()
 }
 
 void
+AutomatorPrivate::addFiles()
+{
+    QStringList filenames = QFileDialog::getOpenFileNames(
+                                window.data(),
+                                tr("Select files"),
+                                filesfrom,
+                                tr("All files (*)")
+    );
+
+    if (!filenames.isEmpty()) {
+        QFileInfo fileInfo(filenames.first());
+        filesfrom = fileInfo.absolutePath();
+        run(filenames);
+    }
+}
+
+void
 AutomatorPrivate::enable(bool enable)
 {
     ui->openPreset->setEnabled(enable);
@@ -265,7 +294,6 @@ AutomatorPrivate::enable(bool enable)
     ui->filedrop->setEnabled(enable);
     ui->fileprogress->setEnabled(enable);
 }
-
 
 bool
 AutomatorPrivate::eventFilter(QObject* object, QEvent* event)
@@ -279,9 +307,12 @@ AutomatorPrivate::eventFilter(QObject* object, QEvent* event)
             if (Question::askQuestion(window.data(), "Jobs are in progress, are you sure you want to quit?")) {
                 saveSettings();
                 return true;
+            } else {
+                event->ignore();
+                return true;
             }
         }
-        event->ignore();
+        saveSettings();
         return true;
     }
     return QObject::eventFilter(object, event);
@@ -292,6 +323,7 @@ AutomatorPrivate::loadSettings()
 {
     QString documents = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
     QSettings settings(MACOSX_BUNDLE_GUI_IDENTIFIER, "Automator");
+    filesfrom = settings.value("filesFrom", documents).toString();
     presetfrom = settings.value("presetFrom", documents).toString();
     saveto = settings.value("saveTo", documents).toString();
 }
@@ -300,6 +332,7 @@ void
 AutomatorPrivate::saveSettings()
 {
     QSettings settings(MACOSX_BUNDLE_GUI_IDENTIFIER, "Automator");
+    settings.setValue("filesFrom", filesfrom);
     settings.setValue("presetFrom", presetfrom);
     settings.setValue("saveTo", saveto);
 }
@@ -514,10 +547,15 @@ AutomatorPrivate::showLog()
 }
 
 void
-AutomatorPrivate::about()
+AutomatorPrivate::showAbout()
 {
-    QPointer<About> about = new About(window.data());
     about->exec();
+}
+
+void
+AutomatorPrivate::showPreferences()
+{
+    preferences->exec();
 }
 
 void

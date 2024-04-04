@@ -89,9 +89,21 @@ QueuePrivate::processNextJob()
             log += QString("\nCommand error:\nCommand path could not be found: %1\n").arg(job->command());
             job->setStatus(Job::Failed);
         } else {
+            QString command = job->command();
+            if (!commandInfo.isAbsolute()) {
+                QSettings settings(MACOSX_BUNDLE_GUI_IDENTIFIER, "Automator");
+                QStringList searchpaths = settings.value("searchpaths", QStringList()).toStringList();
+                for(QString searchpath : searchpaths) {
+                    QString filepath = QDir::cleanPath(QDir(searchpath).filePath(command));
+                    if (QFile::exists(filepath)) {
+                        command = filepath;
+                        break;
+                    }
+                }
+            }
             Process process;
             job->setStatus(Job::Running);
-            if (process.run(job->command(), job->arguments())) {
+            if (process.run(command, job->arguments(), job->startin())) {
                 job->setStatus(Job::Completed);
             } else {
                 job->setStatus(Job::Failed);

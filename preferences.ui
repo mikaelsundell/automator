@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Log</class>
- <widget class="QDialog" name="Log">
+ <class>Preferences</class>
+ <widget class="QDialog" name="Preferences">
   <property name="windowModality">
    <enum>Qt::WindowModal</enum>
   </property>
@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>700</width>
+    <width>400</width>
     <height>600</height>
    </rect>
   </property>
@@ -48,7 +48,7 @@
     <number>12</number>
    </property>
    <item>
-    <widget class="QWidget" name="logBar" native="true">
+    <widget class="QWidget" name="preferencesBar" native="true">
      <property name="minimumSize">
       <size>
        <width>0</width>
@@ -74,7 +74,7 @@
       <item>
        <widget class="QLabel" name="label">
         <property name="text">
-         <string>Log</string>
+         <string>Preferences</string>
         </property>
        </widget>
       </item>
@@ -82,10 +82,10 @@
     </widget>
    </item>
    <item>
-    <widget class="QWidget" name="logWidget" native="true">
+    <widget class="QWidget" name="preferencesWidget" native="true">
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <property name="spacing">
-       <number>0</number>
+       <number>10</number>
       </property>
       <property name="leftMargin">
        <number>10</number>
@@ -100,63 +100,52 @@
        <number>10</number>
       </property>
       <item>
-       <widget class="QSplitter" name="splitter">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
+       <widget class="QLabel" name="label_2">
+        <property name="font">
+         <font>
+          <pointsize>12</pointsize>
+          <bold>true</bold>
+         </font>
         </property>
-        <property name="childrenCollapsible">
-         <bool>false</bool>
+        <property name="text">
+         <string>Search paths</string>
         </property>
-        <widget class="QTreeWidget" name="items">
-         <property name="font">
-          <font>
-           <pointsize>10</pointsize>
-          </font>
-         </property>
-         <property name="alternatingRowColors">
-          <bool>true</bool>
-         </property>
-         <property name="columnCount">
-          <number>3</number>
-         </property>
-         <attribute name="headerVisible">
-          <bool>true</bool>
-         </attribute>
-         <column>
-          <property name="text">
-           <string notr="true">1</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string notr="true">2</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string notr="true">3</string>
-          </property>
-         </column>
-        </widget>
-        <widget class="QTextBrowser" name="log">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>50</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <pointsize>10</pointsize>
-          </font>
-         </property>
-        </widget>
+       </widget>
+      </item>
+      <item>
+       <widget class="QListWidget" name="searchpaths">
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QWidget" name="widget" native="true">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>0</height>
+         </size>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QPushButton" name="add">
+           <property name="text">
+            <string>Add</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="remove">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>Remove</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </item>
      </layout>
@@ -195,16 +184,6 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="clear">
-        <property name="toolTip">
-         <string>Clear</string>
-        </property>
-        <property name="text">
-         <string>Clear</string>
-        </property>
-       </widget>
-      </item>
-      <item>
        <spacer name="horizontalSpacer">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -230,7 +209,7 @@
   <connection>
    <sender>close</sender>
    <signal>clicked()</signal>
-   <receiver>Log</receiver>
+   <receiver>Preferences</receiver>
    <slot>close()</slot>
    <hints>
     <hint type="sourcelabel">

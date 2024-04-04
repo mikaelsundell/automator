@@ -4,19 +4,16 @@
 
 #pragma once
 
-#include "job.h"
-
 #include <QDialog>
 
-class LogPrivate;
-class Log : public QDialog
+class PreferencesPrivate;
+class Preferences : public QDialog
 {
     Q_OBJECT
     public:
-        Log(QWidget* parent = nullptr);
-        virtual ~Log();
-        void addJob(QSharedPointer<Job> job);
-    
+        Preferences(QWidget* parent = nullptr);
+        virtual ~Preferences();
+
     private:
-        QScopedPointer<LogPrivate> p;
+        QScopedPointer<PreferencesPrivate> p;
 };

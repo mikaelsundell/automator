@@ -34,6 +34,8 @@ set (app_sources
     mac.h
     mac.mm
     main.cpp
+    preferences.h
+    preferences.cpp
     preset.h
     preset.cpp
     process.h
@@ -46,6 +48,7 @@ set (app_sources
     automator.ui
     log.ui
     question.ui
+    preferences.ui
     automator.qrc
 )
 

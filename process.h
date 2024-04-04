@@ -13,7 +13,7 @@ class Process : public QObject {
     public:
         Process();
         virtual ~Process();
-        bool run(const QString& command, const QStringList& arguments);
+        bool run(const QString& command, const QStringList& arguments, const QString& startin);
         QString standardOutput() const;
         QString standardError() const;
     

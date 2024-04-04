@@ -54,7 +54,28 @@ QLabel#saveTo {
     color: hsl(0, 0%, 80%);
 }
 
+/* QListWidget widgets */
+QListWidget
+{
+    color: hsl(0, 0%, 80%);
+    font-size: 10px;
+    font-weight: normal;
+    selection-background-color: hsl(216, 82%, 40%);
+}
+
+QListWidget::item {
+    padding: 8px 5px 5px 6px;
+}
+
+QListWidget::item:selected:!active {
+    background: hsl(216, 82%, 47%);
+}
+
 /* QWidgets widgets */
+
+QWidget#filedropBar,
+QWidget#logBar,
+QWidget#preferencesBar,
 QWidget#presetBar
 {
     background-color: hsl(220, 30%, 12%);
@@ -63,6 +84,9 @@ QWidget#presetBar
     border-bottom-right-radius: 0px;
 }
 
+QWidget#filedropWidget
+QWidget#logWidget,
+QWidget#preferencesWidget,
 QWidget#presetWidget
 {
     background-color: hsl(220, 30%, 8%);
@@ -70,39 +94,6 @@ QWidget#presetWidget
     border-top-left-radius: 0px;
     border-top-right-radius: 0px;
 }
-
-QWidget#filedropBar
-{
-    background-color: hsl(220, 30%, 12%);
-    border-radius: 5px;
-    border-bottom-left-radius: 0px;
-    border-bottom-right-radius: 0px;
-}
-
-QWidget#filedropWidget
-{
-    background-color: hsl(220, 30%, 8%);
-    border-radius: 5px;
-    border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
-}
-
-QWidget#logBar
-{
-    background-color: hsl(220, 30%, 12%);
-    border-radius: 5px;
-    border-bottom-left-radius: 0px;
-    border-bottom-right-radius: 0px;
-}
-
-QWidget#logWidget
-{
-    background-color: hsl(220, 30%, 8%);
-    border-radius: 5px;
-    border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
-}
-
 
 /* QPushButton widgets */
 QPushButton
@@ -120,6 +111,11 @@ QPushButton
     padding: 2px;
     padding-left: 5px;
     padding-right: 5px;
+}
+
+QPushButton:disabled
+{
+    color:  hsl(0, 0%, 40%);
 }
 
 QPushButton:pressed
@@ -147,7 +143,6 @@ QTreeView
 {
     color: hsl(0, 0%, 80%);
     font-weight: normal;
-    alternate-background-color: #2c2c2c;
     selection-background-color: hsl(216, 82%, 40%);
 }
 
@@ -156,7 +151,6 @@ QTreeView::item {
 }
 
 QTreeView::item:selected:!active {
-    color: #b1b1b1;
     background: hsl(216, 82%, 47%);
 }
 
@@ -164,7 +158,6 @@ QTreeView QHeaderView:section
 {
     font-size: 10px;
     font-weight: normal;
-    color: #b1b1b1;
     border: 1px solid hsl(220, 0%, 10%);
     background-color: hsl(220, 8%, 15%);
     padding: 4px;

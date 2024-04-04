@@ -63,8 +63,11 @@ Process::~Process()
 }
 
 bool
-Process::run(const QString& command, const QStringList& arguments)
+Process::run(const QString& command, const QStringList& arguments, const QString& startin)
 {
+    if (startin.length()) {
+        p->process->setWorkingDirectory(startin);
+    }
     p->process->start(command, arguments);
     return p->process->waitForFinished() && p->process->exitStatus() == QProcess::NormalExit &&
            p->process->exitCode() == 0;
