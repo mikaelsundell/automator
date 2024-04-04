@@ -18,11 +18,12 @@ class QueuePrivate : public QObject
     public:
         QueuePrivate();
         void init();
+        void update();
         QUuid submit(QSharedPointer<Job> job);
         void processNextJob();
         void processDependentJobs(const QUuid& dependsonUuid);
         void failDependentJobs(const QUuid& dependsonId);
-    
+
     public Q_SLOTS:
         void statusChanged(const QUuid& uuid, Job::Status status);
     
@@ -30,6 +31,7 @@ class QueuePrivate : public QObject
         void notifyStatusChanged(const QUuid& uuid, Job::Status status);
     
     public:
+        int threads;
         QQueue<QSharedPointer<Job>> pendingJobs;
         QSet<QUuid> completedJobs;
         QMap<QUuid, QList<QSharedPointer<Job>>> dependentJobs;
@@ -37,17 +39,22 @@ class QueuePrivate : public QObject
 };
 
 QueuePrivate::QueuePrivate()
+: threads(1)
 {
 }
 
 void
 QueuePrivate::init()
 {
-    int maxThreads = 2;
     // connect
     connect(this, &QueuePrivate::notifyStatusChanged, this, &QueuePrivate::statusChanged);
-    // threads
-    QThreadPool::globalInstance()->setMaxThreadCount(maxThreads);
+    update();
+}
+
+void
+QueuePrivate::update()
+{
+    QThreadPool::globalInstance()->setMaxThreadCount(threads);
 }
 
 QUuid QueuePrivate::submit(QSharedPointer<Job> job) {
@@ -63,41 +70,45 @@ QUuid QueuePrivate::submit(QSharedPointer<Job> job) {
 void
 QueuePrivate::processNextJob()
 {
-    if (pendingJobs.isEmpty()/* || QThreadPool::globalInstance()->activeThreadCount() >= QThreadPool::globalInstance()->maxThreadCount()*/) {
-
+    if (pendingJobs.isEmpty()) {
         return;
     }
-
     QSharedPointer<Job> job = pendingJobs.dequeue();
-    job->setStatus(Job::Running);
     QtConcurrent::run([this, job]() {
 
-        qDebug()  << "Running on thread: " << QThread::currentThread();
+        QString log = QString("Uuid:\n"
+                              "%1\n\n"
+                              "Command:\n"
+                              "%2 %3\n")
+                              .arg(job->uuid().toString())
+                              .arg(job->command())
+                              .arg(job->arguments().join(' '));
         
-        Process process;
-        process.run(job->command(), job->arguments().split(" "));
+        QFileInfo commandInfo(job->command());
+        if (commandInfo.isAbsolute() && !commandInfo.exists()) {
+            log += QString("\nCommand error:\nCommand path could not be found: %1\n").arg(job->command());
+            job->setStatus(Job::Failed);
+        } else {
+            Process process;
+            job->setStatus(Job::Running);
+            if (process.run(job->command(), job->arguments())) {
+                job->setStatus(Job::Completed);
+            } else {
+                job->setStatus(Job::Failed);
+            }
+            
+            const QString standardOutput = process.standardOutput();
+            if (!standardOutput.isEmpty()) {
+                log += QString("\nCommand output:\n%1\n").arg(standardOutput);
+            }
+
+            const QString standardError = process.standardError();
+            if (!standardError.isEmpty()) {
+                log += QString("\nCommand error:\n%1\n").arg(standardError);
+            }
+        }
         
-        
-        job->setLog(
-            QString("Command:\n"
-                    "%1 %2\n"
-                    "\n"
-                    "Standart-out:\n"
-                    "%3\n"
-                    "Standard error:\n"
-                    "%4")
-                    .arg(job->command())
-                    .arg(job->arguments())
-                    .arg(process.standardOutput())
-                    .arg(process.standardError())
-        );
-        
-        // On success
-        job->setStatus(Job::Completed);
-        
-        // On failure
-        // job->status = Job::Failed;
-        
+        job->setLog(log);
         queue->jobProcessed(job->uuid());
         notifyStatusChanged(job->uuid(), job->status());
     });
@@ -128,8 +139,6 @@ QueuePrivate::failDependentJobs(const QUuid& dependsonId) {
 void
 QueuePrivate::statusChanged(const QUuid& uuid, Job::Status status)
 {
-    qDebug() << "statusChanged: " << uuid;
-    
     if (status == Job::Completed) {
         completedJobs.insert(uuid); // Mark the job as completed
         processDependentJobs(uuid);
@@ -156,5 +165,12 @@ QUuid
 Queue::submit(QSharedPointer<Job> job)
 {
     return p->submit(job);
+}
+
+void
+Queue::setThreads(int threads)
+{
+    p->threads = threads;
+    p->update();
 }
 

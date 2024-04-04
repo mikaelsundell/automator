@@ -20,7 +20,7 @@ class JobPrivate : public QObject
         QUuid uuid;
         QString name;
         QString command;
-        QString arguments;
+        QStringList arguments;
         QString startin;
         QUuid dependson;
         QString log;
@@ -57,7 +57,7 @@ Job::command() const
     return p->command;
 }
 
-QString
+QStringList
 Job::arguments() const
 {
     return p->arguments;
@@ -109,7 +109,7 @@ Job::setCommand(const QString& command)
 }
 
 void
-Job::setArguments(const QString& arguments)
+Job::setArguments(const QStringList& arguments)
 {
     if (p->arguments != arguments) {
         p->arguments = arguments;

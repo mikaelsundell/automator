@@ -28,7 +28,7 @@ class Job : public QObject {
         Job();
         virtual ~Job();
         QString command() const;
-        QString arguments() const;
+        QStringList arguments() const;
         QUuid dependson() const;
         QString log() const;
         QString name() const;
@@ -36,7 +36,7 @@ class Job : public QObject {
         QString startin() const;
         Status status() const;
         void setCommand(const QString& command);
-        void setArguments(const QString& arguments);
+        void setArguments(const QStringList& arguments);
         void setDependson(QUuid dependson);
         void setLog(const QString& log);
         void setName(const QString& name);

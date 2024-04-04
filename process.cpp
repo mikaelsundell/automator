@@ -6,7 +6,6 @@
 #include "process.h"
 
 #include <QProcess>
-
 #include <QDebug>
 
 class ProcessPrivate : public QObject
@@ -17,11 +16,12 @@ class ProcessPrivate : public QObject
         void init();
     
     public Q_SLOTS:
-        QString standardOutput();
-        QString standardError();
-        void processFinished(int exitCode, QProcess::ExitStatus exitStatus);
+        void standardOutput();
+        void standardError();
     
     public:
+        QString outputBuffer;
+        QString errorBuffer;
         QScopedPointer<QProcess> process;
 };
 
@@ -36,25 +36,18 @@ ProcessPrivate::init()
     // connect
     connect(process.data(), &QProcess::readyReadStandardOutput, this, &ProcessPrivate::standardOutput);
     connect(process.data(), &QProcess::readyReadStandardError, this, &ProcessPrivate::standardError);
-    connect(process.data(), QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &ProcessPrivate::processFinished);
-}
-
-QString
-ProcessPrivate::standardOutput()
-{
-    return process->readAllStandardOutput();
-}
-
-QString
-ProcessPrivate::standardError()
-{
-    return process->readAllStandardError();
 }
 
 void
-ProcessPrivate::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
+ProcessPrivate::standardOutput()
 {
-    qDebug() << "Process finished with exit code" << exitCode << "and exit status" << exitStatus;
+    outputBuffer.append(process->readAllStandardOutput());
+}
+
+void
+ProcessPrivate::standardError()
+{
+    errorBuffer.append(process->readAllStandardError());
 }
 
 #include "process.moc"
@@ -69,21 +62,22 @@ Process::~Process()
 {
 }
 
-void
+bool
 Process::run(const QString& command, const QStringList& arguments)
 {
     p->process->start(command, arguments);
-    p->process->waitForFinished();
+    return p->process->waitForFinished() && p->process->exitStatus() == QProcess::NormalExit &&
+           p->process->exitCode() == 0;
 }
 
 QString
 Process::standardOutput() const
 {
-    return p->standardOutput();
+    return p->outputBuffer;
 }
 
 QString
 Process::standardError() const
 {
-    return p->standardError();
+    return p->errorBuffer;
 }

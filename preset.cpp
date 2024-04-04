@@ -16,7 +16,7 @@ class PresetPrivate : public QObject
     public:
         PresetPrivate();
         void init();
-        bool read(const QString& filename);
+        bool read();
     
     public:
         QString filename;
@@ -38,7 +38,7 @@ PresetPrivate::init()
 }
 
 bool
-PresetPrivate::read(const QString& filename)
+PresetPrivate::read()
 {
     QFile file(filename);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -92,8 +92,7 @@ PresetPrivate::read(const QString& filename)
                 qDebug() << "name: " << task.name;
                 qDebug() << "command: " << task.command;
                 qDebug() << "extension: " << task.extension;
-                qDebug() << "arguments: " << task.arguments;
-                
+                qDebug() << "arguments: " << task.arguments;                
                 qDebug() << "log: " << log;
             }
         }
@@ -116,13 +115,20 @@ Preset::~Preset()
 bool
 Preset::read(const QString& filename)
 {
-    return p->read(filename);
+    p->filename = filename;
+    return p->read();
 }
 
 bool
 Preset::valid() const
 {
     return p->valid;
+}
+
+QString
+Preset::filename() const
+{
+    return p->filename;
 }
 
 QString

@@ -20,6 +20,7 @@ class LogPrivate : public QObject
         void init();
         void addJob(QSharedPointer<Job> job);
         void updateJob(const QUuid& uuid);
+        bool eventFilter(QObject* object, QEvent* event);
     
     public Q_SLOTS:
         void jobChanged();
@@ -28,6 +29,8 @@ class LogPrivate : public QObject
         void close();
 
     public:
+        QTreeWidgetItem* findItemByUuid(const QUuid& uuid, QTreeWidgetItem* parent = nullptr);
+        QSize size;
         QList<QSharedPointer<Job>> jobs; // prevent deletition
         QPointer<Log> dialog;
         QScopedPointer<Ui_Log> ui;
@@ -49,6 +52,12 @@ LogPrivate::init()
                       << "Name"
                       << "Status"
     );
+    ui->items->setColumnWidth(0, 280);
+    ui->items->setColumnWidth(1, 250);
+    ui->items->header()->setStretchLastSection(true);
+    // event filter
+    dialog->installEventFilter(this);
+    // layout
     // connect
     connect(ui->items, &QTreeWidget::itemSelectionChanged, this, &LogPrivate::selectionChanged);
     connect(ui->close, &QPushButton::pressed, this, &LogPrivate::close);
@@ -58,9 +67,18 @@ LogPrivate::init()
 void
 LogPrivate::addJob(QSharedPointer<Job> job)
 {
-    QTreeWidgetItem* item = new QTreeWidgetItem(ui->items);
+    QTreeWidgetItem* parentItem = nullptr;
+    QUuid dependsonUuid = job->dependson();
+    if (!dependsonUuid.isNull()) {
+       parentItem = findItemByUuid(dependsonUuid);
+    }
+    QTreeWidgetItem* item = new QTreeWidgetItem();
     item->setData(0, Qt::UserRole, QVariant::fromValue(job));
-    ui->items->addTopLevelItem(item);
+    if (parentItem) {
+        parentItem->addChild(item);
+    } else {
+        ui->items->addTopLevelItem(item);
+    }
     updateJob(job->uuid());
     // connect
     connect(job.data(), SIGNAL(jobChanged()), this, SLOT(jobChanged()));
@@ -70,39 +88,52 @@ LogPrivate::addJob(QSharedPointer<Job> job)
 void
 LogPrivate::updateJob(const QUuid& uuid)
 {
-    for (int i = 0; i < ui->items->topLevelItemCount(); ++i) {
-        QTreeWidgetItem* item = ui->items->topLevelItem(i);
-        QVariant data = item->data(0, Qt::UserRole);
-        QSharedPointer<Job> itemjob = data.value<QSharedPointer<Job>>();
-        
-        if (itemjob->uuid() == uuid) {
-            item->setText(0, itemjob->uuid().toString());
-            item->setText(1, itemjob->name());
-            switch(itemjob->status())
-            {
-                case Job::Pending: {
-                    item->setText(2, "Pending");
-                }
-                break;
-                case Job::Running: {
-                    item->setText(2, "Running");
-                }
-                break;
-                case Job::Completed: {
-                    item->setText(2, "Completed");
-                }
-                break;
-                case Job::Failed: {
-                    item->setText(2, "Failed");
-                }
-                break;
-                case Job::Cancelled: {
-                    item->setText(2, "Cancelled");
-                }
-                break;
+    QTreeWidgetItem* item = findItemByUuid(uuid);
+    QVariant data = item->data(0, Qt::UserRole);
+    QSharedPointer<Job> itemjob = data.value<QSharedPointer<Job>>();
+    
+    if (itemjob->uuid() == uuid) {
+        item->setText(0, itemjob->uuid().toString());
+        item->setText(1, itemjob->name());
+        switch(itemjob->status())
+        {
+            case Job::Pending: {
+                item->setText(2, "Pending");
             }
+            break;
+            case Job::Running: {
+                item->setText(2, "Running");
+            }
+            break;
+            case Job::Completed: {
+                item->setText(2, "Completed");
+            }
+            break;
+            case Job::Failed: {
+                item->setText(2, "Failed");
+            }
+            break;
+            case Job::Cancelled: {
+                item->setText(2, "Cancelled");
+            }
+            break;
         }
+        ui->log->setText(itemjob->log());
     }
+}
+
+bool
+LogPrivate::eventFilter(QObject* object, QEvent* event)
+{
+    if (event->type() == QEvent::Show) {
+        QList<int> sizes;
+        int height = ui->splitter->height();
+        int jobsHeight = height * 0.75;
+        int logHeight = height - jobsHeight;
+        sizes << jobsHeight << logHeight;
+        ui->splitter->setSizes(sizes);
+    }
+    return false;
 }
 
 void
@@ -114,17 +145,13 @@ LogPrivate::jobChanged()
 void
 LogPrivate::selectionChanged()
 {
-    
-    
     QList<QTreeWidgetItem*> selectedItems = ui->items->selectedItems();
     if (!selectedItems.isEmpty()) {
         // Get the first selected item
         QTreeWidgetItem* item = selectedItems.first();
         QVariant data = item->data(0, Qt::UserRole);
         QSharedPointer<Job> job = data.value<QSharedPointer<Job>>();
-        
         ui->log->setText(job->log());
-    
     }
 }
 
@@ -132,12 +159,35 @@ void
 LogPrivate::clear()
 {
     ui->items->clear();
+    ui->log->clear();
 }
 
 void
 LogPrivate::close()
 {
     dialog->close();
+}
+
+QTreeWidgetItem*
+LogPrivate::findItemByUuid(const QUuid& uuid, QTreeWidgetItem* parent)
+{
+    QTreeWidgetItem* foundItem = nullptr;
+    int itemCount = parent ? parent->childCount() : ui->items->topLevelItemCount();
+    for (int i = 0; i < itemCount; ++i) {
+        QTreeWidgetItem* item = parent ? parent->child(i) : ui->items->topLevelItem(i);
+        QVariant data = item->data(0, Qt::UserRole);
+        QSharedPointer<Job> itemJob = data.value<QSharedPointer<Job>>();
+        if (itemJob && itemJob->uuid() == uuid) {
+            return item;
+        }
+        if (item->childCount() > 0) {
+            foundItem = findItemByUuid(uuid, item);
+            if (foundItem) {
+                return foundItem;
+            }
+        }
+    }
+    return nullptr;
 }
 
 #include "log.moc"

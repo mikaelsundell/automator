@@ -19,6 +19,7 @@
 #include <QList>
 #include <QMessageBox>
 #include <QPointer>
+#include <QRegularExpression>
 #include <QSettings>
 #include <QSharedPointer>
 #include <QStandardPaths>
@@ -40,6 +41,7 @@ class AutomatorPrivate : public QObject
         void presets();
         void activate();
         void deactivate();
+        void enable(bool enable);
         bool eventFilter(QObject* object, QEvent* event);
         void loadSettings();
         void saveSettings();
@@ -50,10 +52,12 @@ class AutomatorPrivate : public QObject
         void showLog();
         void run(const QList<QString>& files);
         void jobProcessed(const QUuid& uuid);
-        void refresh();
+        void refreshPreset();
+        void openPreset();
         void openPresetfrom();
         void openSaveto();
         void showSaveto();
+        void threadsChanged(int index);
         void about();
         void openGithubReadme();
         void openGithubIssues();
@@ -85,8 +89,8 @@ class AutomatorPrivate : public QObject
                 about->licenses->setText(text);
             }
         };
-        QString replacePattern(const QString& file, const QString& pattern, const QFileInfo& inputinfo);
-        QString replaceFile(const QString& file, const QFileInfo& inputinfo, const QFileInfo& outputinfo);
+        QString replacePattern(const QString& input, const QString& pattern, const QFileInfo& inputinfo);
+        QString replaceInput(const QString& input, const QFileInfo& inputinfo, const QFileInfo& outputinfo);
         int width;
         int height;
         QSize size;
@@ -147,11 +151,13 @@ AutomatorPrivate::init()
     connect(ui->toggleFiledrop, &QPushButton::pressed, this, &AutomatorPrivate::toggleFiledrop);
     connect(presetfilter.data(), &Eventfilter::pressed, ui->togglePreset, &QPushButton::click);
     connect(filedropfilter.data(), &Eventfilter::pressed, ui->toggleFiledrop, &QPushButton::click);
-    connect(ui->refresh, &QPushButton::clicked, this, &AutomatorPrivate::refresh);
+    connect(ui->refreshPreset, &QPushButton::clicked, this, &AutomatorPrivate::refreshPreset);
+    connect(ui->openPreset, &QPushButton::clicked, this, &AutomatorPrivate::openPreset);
     connect(ui->openPresetfrom, &QPushButton::clicked, this, &AutomatorPrivate::openPresetfrom);
     connect(ui->openSaveto, &QPushButton::clicked, this, &AutomatorPrivate::openSaveto);
     connect(ui->showSaveto, &QPushButton::clicked, this, &AutomatorPrivate::showSaveto);
     connect(ui->filedrop, &Filedrop::filesDropped, this, &AutomatorPrivate::run);
+    connect(ui->threads, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &AutomatorPrivate::threadsChanged);
     connect(ui->log, &QPushButton::clicked, this, &AutomatorPrivate::showLog);
     connect(ui->about, &QAction::triggered, this, &AutomatorPrivate::about);
     connect(ui->openGithubReadme, &QAction::triggered, this, &AutomatorPrivate::openGithubReadme);
@@ -242,16 +248,24 @@ AutomatorPrivate::presets()
 void
 AutomatorPrivate::activate()
 {
-    ui->filedrop->setEnabled(true);
-    ui->fileprogress->setEnabled(true);
+    enable(true);
 }
 
 void
 AutomatorPrivate::deactivate()
 {
-    ui->filedrop->setEnabled(false);
-    ui->fileprogress->setEnabled(true);
+    enable(false);
 }
+
+void
+AutomatorPrivate::enable(bool enable)
+{
+    ui->openPreset->setEnabled(enable);
+    ui->refreshPreset->setEnabled(enable);
+    ui->filedrop->setEnabled(enable);
+    ui->fileprogress->setEnabled(enable);
+}
+
 
 bool
 AutomatorPrivate::eventFilter(QObject* object, QEvent* event)
@@ -261,12 +275,14 @@ AutomatorPrivate::eventFilter(QObject* object, QEvent* event)
         stylesheet();
     }
     if (event->type() == QEvent::Close) {
-        if (Question::askQuestion(window.data(), "hello, world!")) {
-            saveSettings();
-        } else {
-            event->ignore();
-            return true;
+        if (ui->fileprogress->value()) {
+            if (Question::askQuestion(window.data(), "Jobs are in progress, are you sure you want to quit?")) {
+                saveSettings();
+                return true;
+            }
         }
+        event->ignore();
+        return true;
     }
     return QObject::eventFilter(object, event);
 }
@@ -289,33 +305,35 @@ AutomatorPrivate::saveSettings()
 }
 
 QString
-AutomatorPrivate::replacePattern(const QString& file, const QString& pattern, const QFileInfo& fileinfo)
+AutomatorPrivate::replacePattern(const QString& input, const QString& pattern, const QFileInfo& fileinfo)
 {
-    QString string = file;
-    {
-        string.replace(QString("%%1dir%").arg(pattern), fileinfo.absolutePath());
-        string.replace(QString("%%1file%").arg(pattern), fileinfo.absoluteFilePath());
-        string.replace(QString("%%1ext%").arg(pattern), fileinfo.suffix());
-        string.replace(QString("%%1base%").arg(pattern), fileinfo.baseName());
+    QString result = input;
+    QList<QPair<QString, QString>> replacements = {
+        {QString("%%1dir%").arg(pattern), fileinfo.absolutePath()},
+        {QString("%%1file%").arg(pattern), fileinfo.absoluteFilePath()},
+        {QString("%%1ext%").arg(pattern), fileinfo.suffix()},
+        {QString("%%1base%").arg(pattern), fileinfo.baseName()}
+    };
+    for (const auto& replacement : replacements) {
+        result.replace(replacement.first, replacement.second);
     }
-    return string;
+    return result;
 }
 
 QString
-AutomatorPrivate::replaceFile(const QString& file, const QFileInfo& inputinfo, const QFileInfo& outputinfo)
+AutomatorPrivate::replaceInput(const QString& input, const QFileInfo& inputinfo, const QFileInfo& outputinfo)
 {
-    return replacePattern(replacePattern(file, "input", inputinfo), "output", outputinfo);
+    return replacePattern(replacePattern(input, "input", inputinfo), "output", outputinfo);
 }
 
 void
 AutomatorPrivate::run(const QList<QString>& files)
 {
-    /*
-    QSharedPointer<Preset> preset = ui->preset->currentData().value<QSharedPointer<Preset>>();
-    QString outputDir = ui->saveto->text();
+    QSharedPointer<Preset> preset = ui->presets->currentData().value<QSharedPointer<Preset>>();
+    QString outputDir = saveto;
     processedfiles.clear();
+    int count = 0;
     for(const QString& file : files) {
-
         QMap<QString, QUuid> jobuuids;
         QList<QPair<QSharedPointer<Job>, QString>> dependentjobs;
         
@@ -330,20 +348,25 @@ AutomatorPrivate::run(const QList<QString>& files)
                 extension;
             
             QFileInfo outputinfo(outputfile);
-            QString command = replaceFile(task.command, inputinfo, outputinfo);
-            QString arguments = replaceFile(task.arguments, inputinfo, outputinfo);
-            QString startin = replaceFile(task.startin, inputinfo, outputinfo);
+            QString command = replaceInput(task.command, inputinfo, outputinfo);
+            QStringList argumentlist = task.arguments.split(' ');
+            
+            for(QString& argument : argumentlist) {
+                argument = replaceInput(argument, inputinfo, outputinfo);
+            }
+            QString startin = replaceInput(task.startin, inputinfo, outputinfo);
             {
                 QSharedPointer<Job> job(new Job());
                 job->setName(task.name);
                 job->setCommand(command);
-                job->setArguments(arguments);
+                job->setArguments(argumentlist);
                 job->setStartin(startin);
-                
+                job->setStatus(Job::Pending);
                 
                 if (task.dependson.isEmpty()) {
                     QUuid uuid = queue->submit(job);
                     log->addJob(job);
+                    count++;
                     
                     if (!processedfiles.contains(file)) {
                         processedfiles.insert(file, QList<QUuid>());
@@ -366,12 +389,14 @@ AutomatorPrivate::run(const QList<QString>& files)
                 }
                 processedfiles[file].append(queue->submit(job));
                 log->addJob(job);
+                count++;
                 
             } else {
-                //qDebug() << "Dependency not found for job: " << job->name();
+                qDebug() << "Dependency not found for job: " << job->name();
             }
         }
-    }*/
+    }
+    ui->fileprogress->setMaximum(ui->fileprogress->maximum() + count);
 }
 
 void
@@ -386,28 +411,34 @@ AutomatorPrivate::jobProcessed(const QUuid& uuid)
             }
         }
     }
-    ui->filedrop->setProgress(processedfiles.count());
+    int value = ui->fileprogress->value() + 1;
+    if (value == ui->fileprogress->maximum() - 1) {
+        ui->fileprogress->setValue(0);
+        ui->fileprogress->setMaximum(1);
+    } else {
+        ui->fileprogress->setValue(value);
+    }
 }
 
 void
-AutomatorPrivate::refresh()
+AutomatorPrivate::refreshPreset()
 {
     presets();
 }
 
 void
+AutomatorPrivate::openPreset()
+{
+    if (ui->presets->count()) {
+        QSharedPointer<Preset> preset = ui->presets->currentData().value<QSharedPointer<Preset>>();
+        QDesktopServices::openUrl(QUrl::fromLocalFile(preset->filename()));
+    }
+}
+
+void
 AutomatorPrivate::openPresetfrom()
 {
-    QString dir = QFileDialog::getExistingDirectory(
-                    window.data(),
-                    tr("Open presets"),
-                    presetfrom,
-                    QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks
-    );
-    if (!dir.isEmpty()) {
-        presetfrom = dir;
-        presets();
-    }
+    QDesktopServices::openUrl(QUrl::fromLocalFile(presetfrom));
 }
 
 void
@@ -416,7 +447,7 @@ AutomatorPrivate::openSaveto()
     QString dir = QFileDialog::getExistingDirectory(
                     window.data(),
                     tr("Open saveto"),
-                    presetfrom,
+                    saveto,
                     QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks
     );
     if (!dir.isEmpty()) {
@@ -430,6 +461,12 @@ void
 AutomatorPrivate::showSaveto()
 {
     QDesktopServices::openUrl(QUrl::fromLocalFile(saveto));
+}
+
+void
+AutomatorPrivate::threadsChanged(int index)
+{
+    queue->setThreads(ui->threads->itemText(index).toInt());
 }
 
 void
@@ -469,7 +506,11 @@ AutomatorPrivate::toggleFiledrop()
 void
 AutomatorPrivate::showLog()
 {
-    log->show();
+    if (log->isVisible()) {
+        log->raise();
+    } else {
+        log->show();
+    }
 }
 
 void

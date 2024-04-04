@@ -31,8 +31,8 @@ class Preset
         virtual ~Preset();
         bool read(const QString& filename);
         bool valid() const;
-        QString log() const;
-    
+        QString filename() const;
+
     public:
         QString name() const;
         QList<Task> tasks();

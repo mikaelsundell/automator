@@ -17,6 +17,7 @@ class Queue : public QObject
         Queue();
         virtual ~Queue();
         QUuid submit(QSharedPointer<Job> job);
+        void setThreads(int threads);
     
     Q_SIGNALS:
         void jobProcessed(const QUuid& uuid);
