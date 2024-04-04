@@ -2,6 +2,8 @@
 
 This product includes software developed by third parties. The copyrights and terms of use of these third-party libraries are fully acknowledged and respected. Below is a list of said libraries and their respective copyright notices:
 
+App icon: Copyright flaticon.com
+
 The Qt Company Ltd.: Copyright (C) 2016 by The Qt Company Ltd. All rights reserved.
 
 The use of the above-mentioned software within this product is in compliance with the respective licenses and/or terms and conditions of the copyright holders. The inclusion of these third-party libraries does not imply any endorsement by the copyright holders of the products developed using their software.
