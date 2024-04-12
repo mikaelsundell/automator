@@ -3,6 +3,7 @@
 // https://github.com/mikaelsundell/automator
 
 #include "automator.h"
+#include "dropfilter.h"
 #include "eventfilter.h"
 #include "icctransform.h"
 #include "log.h"
@@ -54,11 +55,12 @@ class AutomatorPrivate : public QObject
         void run(const QList<QString>& files);
         void jobProcessed(const QUuid& uuid);
         void addFiles();
-        void refreshPreset();
+        void refreshPresets();
         void openPreset();
         void openPresetfrom();
         void openSaveto();
         void showSaveto();
+        void saveToChanged(const QString& text);
         void threadsChanged(int index);
         void showAbout();
         void showPreferences();
@@ -105,6 +107,7 @@ class AutomatorPrivate : public QObject
         QScopedPointer<About> about;
         QScopedPointer<Preferences> preferences;
         QScopedPointer<Log> log;
+        QScopedPointer<Dropfilter> dropfilter;
         QScopedPointer<Eventfilter> presetfilter;
         QScopedPointer<Eventfilter> filedropfilter;
         QScopedPointer<Ui_Automator> ui;
@@ -156,17 +159,21 @@ AutomatorPrivate::init()
     // color filter
     filedropfilter.reset(new Eventfilter);
     ui->filedropBar->installEventFilter(filedropfilter.data());
+    // drop filter
+    dropfilter.reset(new Dropfilter);
+    ui->saveTo->installEventFilter(dropfilter.data());
     // connect
     connect(ui->togglePreset, &QPushButton::pressed, this, &AutomatorPrivate::togglePreset);
     connect(ui->toggleFiledrop, &QPushButton::pressed, this, &AutomatorPrivate::toggleFiledrop);
     connect(presetfilter.data(), &Eventfilter::pressed, ui->togglePreset, &QPushButton::click);
     connect(filedropfilter.data(), &Eventfilter::pressed, ui->toggleFiledrop, &QPushButton::click);
     connect(ui->addfiles, &QAction::triggered, this, &AutomatorPrivate::addFiles);
-    connect(ui->refreshPreset, &QPushButton::clicked, this, &AutomatorPrivate::refreshPreset);
+    connect(ui->refreshPresets, &QPushButton::clicked, this, &AutomatorPrivate::refreshPresets);
     connect(ui->openPreset, &QPushButton::clicked, this, &AutomatorPrivate::openPreset);
     connect(ui->openPresetfrom, &QPushButton::clicked, this, &AutomatorPrivate::openPresetfrom);
     connect(ui->openSaveto, &QPushButton::clicked, this, &AutomatorPrivate::openSaveto);
     connect(ui->showSaveto, &QPushButton::clicked, this, &AutomatorPrivate::showSaveto);
+    connect(dropfilter.data(), &Dropfilter::textChanged, this, &AutomatorPrivate::saveToChanged);
     connect(ui->filedrop, &Filedrop::filesDropped, this, &AutomatorPrivate::run);
     connect(ui->threads, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &AutomatorPrivate::threadsChanged);
     connect(ui->log, &QPushButton::clicked, this, &AutomatorPrivate::showLog);
@@ -290,7 +297,7 @@ void
 AutomatorPrivate::enable(bool enable)
 {
     ui->openPreset->setEnabled(enable);
-    ui->refreshPreset->setEnabled(enable);
+    ui->refreshPresets->setEnabled(enable);
     ui->filedrop->setEnabled(enable);
     ui->fileprogress->setEnabled(enable);
 }
@@ -454,7 +461,7 @@ AutomatorPrivate::jobProcessed(const QUuid& uuid)
 }
 
 void
-AutomatorPrivate::refreshPreset()
+AutomatorPrivate::refreshPresets()
 {
     presets();
 }
@@ -471,7 +478,16 @@ AutomatorPrivate::openPreset()
 void
 AutomatorPrivate::openPresetfrom()
 {
-    QDesktopServices::openUrl(QUrl::fromLocalFile(presetfrom));
+    QString dir = QFileDialog::getExistingDirectory(
+                    window.data(),
+                    tr("Open preset folder ..."),
+                    presetfrom,
+                    QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks
+    );
+    if (!dir.isEmpty()) {
+        presetfrom = dir;
+        refreshPresets();
+    }
 }
 
 void
@@ -479,7 +495,7 @@ AutomatorPrivate::openSaveto()
 {
     QString dir = QFileDialog::getExistingDirectory(
                     window.data(),
-                    tr("Open saveto"),
+                    tr("Open savefolder ..."),
                     saveto,
                     QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks
     );
@@ -494,6 +510,12 @@ void
 AutomatorPrivate::showSaveto()
 {
     QDesktopServices::openUrl(QUrl::fromLocalFile(saveto));
+}
+
+void
+AutomatorPrivate::saveToChanged(const QString& text)
+{
+    saveto = text;
 }
 
 void

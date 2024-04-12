@@ -21,6 +21,8 @@ find_package( Lcms2 REQUIRED )
 set (app_sources
     automator.h
     automator.cpp
+    dropfilter.h
+    dropfilter.cpp
     eventfilter.h
     eventfilter.cpp
     filedrop.h

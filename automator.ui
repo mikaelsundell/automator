@@ -234,6 +234,9 @@
                 <pointsize>10</pointsize>
                </font>
               </property>
+              <property name="acceptDrops">
+               <bool>true</bool>
+              </property>
               <property name="text">
                <string/>
               </property>
@@ -385,7 +388,7 @@
              </spacer>
             </item>
             <item>
-             <widget class="QToolButton" name="refreshPreset">
+             <widget class="QToolButton" name="refreshPresets">
               <property name="toolTip">
                <string>Refresh preset</string>
               </property>

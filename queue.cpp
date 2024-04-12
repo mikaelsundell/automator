@@ -105,7 +105,9 @@ QueuePrivate::processNextJob()
             job->setStatus(Job::Running);
             if (process.run(command, job->arguments(), job->startin())) {
                 job->setStatus(Job::Completed);
+                log += QString("\nStatus:\n%1\n").arg("Command completed");
             } else {
+                log += QString("\nStatus:\n%1\n").arg("Command failed");
                 job->setStatus(Job::Failed);
             }
             
@@ -141,7 +143,19 @@ void
 QueuePrivate::failDependentJobs(const QUuid& dependsonId) {
     if (dependentJobs.contains(dependsonId)) {
         for (QSharedPointer<Job> job : dependentJobs[dependsonId]) {
+            QString log = QString("Uuid:\n"
+                                  "%1\n\n"
+                                  "Command:\n"
+                                  "%2 %3\n\n"
+                                  "Status:\n"
+                                  "Command could not be started, dependent job failed: %4")
+                                  .arg(job->uuid().toString())
+                                  .arg(job->command())
+                                  .arg(job->arguments().join(' '))
+                                  .arg(dependsonId.toString());
+            job->setLog(log);
             job->setStatus(Job::Failed);
+            queue->jobProcessed(job->uuid());
             notifyStatusChanged(job->uuid(), job->status());
         }
         dependentJobs.remove(dependsonId);
