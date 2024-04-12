@@ -107,7 +107,7 @@
         <property name="childrenCollapsible">
          <bool>false</bool>
         </property>
-        <widget class="QTreeWidget" name="items">
+        <widget class="LogTree" name="items">
          <property name="font">
           <font>
            <pointsize>10</pointsize>
@@ -222,6 +222,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>LogTree</class>
+   <extends>QTreeWidget</extends>
+   <header>../../../logtree.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="automator.qrc"/>
   <include location="automator.qrc"/>

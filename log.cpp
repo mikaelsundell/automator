@@ -3,10 +3,13 @@
 // https://github.com/mikaelsundell/automator
 
 #include "log.h"
+#include "icctransform.h"
 
+#include <QPainter>
 #include <QPointer>
 #include <QSharedPointer>
 #include <QTreeWidgetItem>
+#include <QStyledItemDelegate>
 #include <QDebug>
 
 // generated files
@@ -29,6 +32,34 @@ class LogPrivate : public QObject
         void close();
 
     public:
+        class StatusDelegate : public QStyledItemDelegate {
+            public:
+                StatusDelegate(QObject *parent = nullptr) : QStyledItemDelegate(parent) {}
+                void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override {
+                    QStyleOptionViewItem opt(option);
+                    initStyleOption(&opt, index);
+                    QColor color;
+                    QString status = index.data().toString();
+                    // icc profile
+                    ICCTransform* transform = ICCTransform::instance();
+                    if (status == "Failed") {
+                        color = transform->map(QColor::fromHsl(359, 90, 40).rgb());
+                    } else if (status == "Running") {
+                        color = transform->map(QColor::fromHsl(120, 90, 40).rgb());
+                    } else {
+                        color = Qt::transparent;
+                    }
+                    painter->save();
+                    painter->setRenderHint(QPainter::Antialiasing, true);
+                    painter->setBrush(color);
+                    painter->setPen(Qt::NoPen);
+                    QRect rect = option.rect.adjusted(4, 4, -4, -4);
+                    painter->drawRoundedRect(option.rect, 2, 2);
+                    painter->setPen(Qt::white);
+                    painter->drawText(rect, Qt::AlignCenter, status);
+                    painter->restore();
+                }
+        };
         QTreeWidgetItem* findItemByUuid(const QUuid& uuid, QTreeWidgetItem* parent = nullptr);
         QSize size;
         QList<QSharedPointer<Job>> jobs; // prevent deletition
@@ -55,6 +86,9 @@ LogPrivate::init()
     ui->items->setColumnWidth(0, 280);
     ui->items->setColumnWidth(1, 250);
     ui->items->header()->setStretchLastSection(true);
+    
+    ui->items->setItemDelegateForColumn(2, new StatusDelegate(ui->items));
+    
     // event filter
     dialog->installEventFilter(this);
     // layout

@@ -33,6 +33,8 @@ set (app_sources
     job.cpp
     log.h
     log.cpp
+    logtree.h
+    logtree.cpp
     mac.h
     mac.mm
     main.cpp
