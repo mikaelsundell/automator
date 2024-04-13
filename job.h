@@ -27,6 +27,7 @@ class Job : public QObject {
     public:
         Job();
         virtual ~Job();
+        QDateTime created() const;
         QString command() const;
         QStringList arguments() const;
         QUuid dependson() const;

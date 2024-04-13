@@ -147,10 +147,11 @@ QTreeView
 }
 
 QTreeView::item {
-    padding: 8px 5px 5px 6px;
+    height: 30px;
 }
 
 QTreeView::item:selected:!active {
+    
     background: hsl(216, 82%, 47%);
 }
 

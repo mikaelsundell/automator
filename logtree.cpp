@@ -14,7 +14,6 @@ class LogTreePrivate : public QObject
     public:
         LogTreePrivate();
         void init();
-        bool eventFilter(QObject* object, QEvent* event);
 
     public:
         QPointer<LogTree> widget;
@@ -27,26 +26,6 @@ LogTreePrivate::LogTreePrivate()
 void
 LogTreePrivate::init()
 {
-    // event filter
-    widget->installEventFilter(this);
-}
-
-bool
-LogTreePrivate::eventFilter(QObject* object, QEvent* event)
-{
-    qDebug() << "event:" << event;
-    
-    if (event->type() == QEvent::MouseButtonPress) {
-        QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(event);
-        QTreeWidget* treeWidget = qobject_cast<QTreeWidget*>(object);
-        if (treeWidget && mouseEvent) {
-            if (treeWidget->itemAt(mouseEvent->pos()) == nullptr) {
-                treeWidget->clearSelection();
-                return true;
-            }
-        }
-    }
-    return QObject::eventFilter(object, event);
 }
 
 #include "logtree.moc"

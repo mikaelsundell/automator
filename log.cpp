@@ -38,26 +38,43 @@ class LogPrivate : public QObject
                 void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override {
                     QStyleOptionViewItem opt(option);
                     initStyleOption(&opt, index);
-                    QColor color;
-                    QString status = index.data().toString();
-                    // icc profile
-                    ICCTransform* transform = ICCTransform::instance();
-                    if (status == "Failed") {
-                        color = transform->map(QColor::fromHsl(359, 90, 40).rgb());
-                    } else if (status == "Running") {
-                        color = transform->map(QColor::fromHsl(120, 90, 40).rgb());
+                    if (opt.state & QStyle::State_Selected) {
+                        QStyledItemDelegate::paint(painter, option, index);
                     } else {
-                        color = Qt::transparent;
+                        QColor color;
+                        QString status = index.data().toString();
+                        // icc profile
+                        ICCTransform* transform = ICCTransform::instance();
+                        if (status == "Failed") {
+                            color = transform->map(QColor::fromHsl(359, 90, 40).rgb());
+                        } else if (status == "Running" ||
+                                   status == "Completed") {
+                            color = transform->map(QColor::fromHsl(120, 90, 40).rgb());
+                        } else {
+                            color = Qt::transparent;
+                        }
+                        painter->save();
+                        painter->setRenderHint(QPainter::Antialiasing, true);
+                        
+                        QFontMetrics metrics(painter->font());
+                        int textWidth = metrics.horizontalAdvance(status);
+                        int textHeight = metrics.height();
+                        int leftPadding = 4;
+                        QRect textRect(
+                            option.rect.left() + leftPadding + 1,
+                            (option.rect.center().y() - textHeight / 2) - 0,
+                            textWidth, textHeight
+                        );
+
+                        painter->setBrush(color);
+                        painter->setPen(Qt::NoPen);
+                        painter->drawRoundedRect(textRect.adjusted(-5, -5, 5, 5), 8, 8);
+
+                        // Draw text
+                        painter->setPen(Qt::white);
+                        painter->drawText(textRect, Qt::AlignLeft | Qt::AlignVCenter, status);
+                        painter->restore();
                     }
-                    painter->save();
-                    painter->setRenderHint(QPainter::Antialiasing, true);
-                    painter->setBrush(color);
-                    painter->setPen(Qt::NoPen);
-                    QRect rect = option.rect.adjusted(4, 4, -4, -4);
-                    painter->drawRoundedRect(option.rect, 2, 2);
-                    painter->setPen(Qt::white);
-                    painter->drawText(rect, Qt::AlignCenter, status);
-                    painter->restore();
                 }
         };
         QTreeWidgetItem* findItemByUuid(const QUuid& uuid, QTreeWidgetItem* parent = nullptr);
@@ -152,7 +169,9 @@ LogPrivate::updateJob(const QUuid& uuid)
             }
             break;
         }
-        ui->log->setText(itemjob->log());
+        if (item->isSelected()) {
+            ui->log->setText(itemjob->log());
+        }
     }
 }
 

@@ -5,6 +5,7 @@
 #include "queue.h"
 
 #include <QObject>
+#include <QDateTime>
 #include <QPointer>
 
 #include <QDebug>
@@ -17,6 +18,7 @@ class JobPrivate : public QObject
         void init();
 
     public:
+        QDateTime created;
         QUuid uuid;
         QString name;
         QString command;
@@ -31,6 +33,7 @@ class JobPrivate : public QObject
 JobPrivate::JobPrivate()
 : status(Job::Pending)
 {
+    created = QDateTime::currentDateTime();
 }
 
 void
@@ -49,6 +52,12 @@ Job::Job()
 
 Job::~Job()
 {
+}
+
+QDateTime
+Job::created() const
+{
+    return p->created;
 }
 
 QString

@@ -21,10 +21,13 @@
 #include <QList>
 #include <QMessageBox>
 #include <QPointer>
+#include <QProcess>
 #include <QRegularExpression>
 #include <QSettings>
 #include <QSharedPointer>
 #include <QStandardPaths>
+#include <QTimer>
+#include <QThread>
 #include <QWindow>
 #include <QDebug>
 
@@ -162,6 +165,8 @@ AutomatorPrivate::init()
     // drop filter
     dropfilter.reset(new Dropfilter);
     ui->saveTo->installEventFilter(dropfilter.data());
+    // progress
+    ui->fileprogress->hide();
     // connect
     connect(ui->togglePreset, &QPushButton::pressed, this, &AutomatorPrivate::togglePreset);
     connect(ui->toggleFiledrop, &QPushButton::pressed, this, &AutomatorPrivate::toggleFiledrop);
@@ -183,6 +188,27 @@ AutomatorPrivate::init()
     connect(ui->openGithubIssues, &QAction::triggered, this, &AutomatorPrivate::openGithubIssues);
     connect(queue.data(), &Queue::jobProcessed, this, &AutomatorPrivate::jobProcessed);
     size = window->size();
+    // cpu
+    QTimer *timer = new QTimer(window.data());
+    QObject::connect(timer, &QTimer::timeout, [&]() {
+        if (ui->fileprogress->maximum()) {
+            QProcess process;
+            process.start("ps", QStringList() << "-A" << "-o" << "%cpu");
+            process.waitForFinished();
+            QString output = process.readAllStandardOutput();
+            QStringList lines = output.split("\n", Qt::SkipEmptyParts);
+            double totalCpu = 0;
+            for (int i = 1; i < lines.size(); ++i) { // Starting at 1 skips the header line
+                totalCpu += lines[i].trimmed().toDouble();
+            }
+            int numberOfCores = QThread::idealThreadCount();
+            double normalizedCpuUsage = totalCpu / numberOfCores;
+            ui->cpu->setText(QString("CPU: %1%").arg(normalizedCpuUsage, 0, 'f', 0));
+        } else {
+            ui->cpu->setText(QString(""));
+        }
+    });
+    timer->start(1000);
     // stylesheet
     stylesheet();
     // debug
@@ -404,8 +430,8 @@ AutomatorPrivate::run(const QList<QString>& files)
                 job->setStatus(Job::Pending);
                 
                 if (task.dependson.isEmpty()) {
-                    QUuid uuid = queue->submit(job);
                     log->addJob(job);
+                    QUuid uuid = queue->submit(job);
                     count++;
                     
                     if (!processedfiles.contains(file)) {
@@ -437,6 +463,11 @@ AutomatorPrivate::run(const QList<QString>& files)
         }
     }
     ui->fileprogress->setMaximum(ui->fileprogress->maximum() + count);
+    if (!ui->fileprogress->isVisible()) {
+        
+        ui->fileprogress->show();
+        ui->idleprogress->hide();
+    }
 }
 
 void
@@ -451,14 +482,18 @@ AutomatorPrivate::jobProcessed(const QUuid& uuid)
             }
         }
     }
+    
     int value = ui->fileprogress->value() + 1;
-    if (value == ui->fileprogress->maximum() - 1) {
+    if (value == ui->fileprogress->maximum()) {
         ui->fileprogress->setValue(0);
-        ui->fileprogress->setMaximum(1);
+        ui->fileprogress->setMaximum(0);
+        ui->fileprogress->hide();
+        ui->idleprogress->show();
     } else {
         ui->fileprogress->setValue(value);
     }
 }
+
 
 void
 AutomatorPrivate::refreshPresets()
