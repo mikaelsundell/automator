@@ -11,11 +11,20 @@ class Process : public QObject {
     Q_OBJECT
     
     public:
+        enum Status {
+            Normal,
+            Crash
+        };
+        Q_ENUM(Status)
+    
+    public:
         Process();
         virtual ~Process();
         bool run(const QString& command, const QStringList& arguments, const QString& startin);
         QString standardOutput() const;
         QString standardError() const;
+        int exitCode() const;
+        Status exitStatus() const;
     
     private:
         QScopedPointer<ProcessPrivate> p;

@@ -105,6 +105,7 @@ QueuePrivate::processNextJob()
                               .arg(job->command())
                               .arg(job->arguments().join(' '));
         
+        job->setLog(log);
         QFileInfo commandInfo(job->command());
         if (commandInfo.isAbsolute() && !commandInfo.exists()) {
             log += QString("\nCommand error:\nCommand path could not be found: %1\n").arg(job->command());
@@ -129,8 +130,19 @@ QueuePrivate::processNextJob()
                 log += QString("\nStatus:\n%1\n").arg("Command completed");
             } else {
                 log += QString("\nStatus:\n%1\n").arg("Command failed");
+                log += QString("\nExit code:\n%1\n").arg(process.exitCode());
+                switch(process.exitStatus())
+                {
+                    case Process::Normal: {
+                        log += QString("\nExit status:\n%1\n").arg("Normal");
+                    }
+                    break;
+                    case Process::Crash: {
+                        log += QString("\nExit status:\n%1\n").arg("Crash");
+                    }
+                    break;
+                }
                 job->setStatus(Job::Failed);
-                
                 if (!job->dependson().isNull()) {
                     failCompletedJobs(job->dependson());
                 }

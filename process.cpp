@@ -69,7 +69,7 @@ Process::run(const QString& command, const QStringList& arguments, const QString
         p->process->setWorkingDirectory(startin);
     }
     p->process->start(command, arguments);
-    return p->process->waitForFinished() && p->process->exitStatus() == QProcess::NormalExit &&
+    return p->process->waitForFinished(-1) && p->process->exitStatus() == QProcess::NormalExit &&
            p->process->exitCode() == 0;
 }
 
@@ -84,3 +84,20 @@ Process::standardError() const
 {
     return p->errorBuffer;
 }
+
+int
+Process::exitCode() const
+{
+    return p->process->exitCode();
+}
+
+Process::Status
+Process::exitStatus() const
+{
+    if (p->process->exitStatus() == QProcess::NormalExit) {
+        return Process::Normal;
+    } else {
+        return Process::Crash;
+    }
+}
+
