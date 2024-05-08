@@ -21,6 +21,7 @@ class Process : public QObject {
         Process();
         virtual ~Process();
         bool run(const QString& command, const QStringList& arguments, const QString& startin);
+        bool exists(const QString& command);
         QString standardOutput() const;
         QString standardError() const;
         int exitCode() const;

@@ -4,6 +4,7 @@
 
 #include "automator.h"
 #include "dropfilter.h"
+#include "error.h"
 #include "eventfilter.h"
 #include "icctransform.h"
 #include "log.h"
@@ -43,7 +44,6 @@ class AutomatorPrivate : public QObject
         void init();
         void stylesheet();
         void profile();
-        void presets();
         void activate();
         void deactivate();
         void enable(bool enable);
@@ -52,6 +52,7 @@ class AutomatorPrivate : public QObject
         void saveSettings();
     
     public Q_SLOTS:
+        void loadPresets();
         void togglePreset();
         void toggleFiledrop();
         void showLog();
@@ -151,9 +152,6 @@ AutomatorPrivate::init()
     // layout
     // needed to keep .ui fixed size from setupUi
     window->setFixedSize(window->size());
-    // presets
-    presets();
-    ui->saveTo->setText(saveto);
     // event filter
     window->installEventFilter(this);
     // display filter
@@ -223,6 +221,8 @@ AutomatorPrivate::init()
             });
         }
     #endif
+    // presets
+    QTimer::singleShot(0, [this]() { this->loadPresets(); });
 }
 
 void
@@ -268,26 +268,6 @@ AutomatorPrivate::profile()
     // icc profile
     ICCTransform* transform = ICCTransform::instance();
     transform->setOutputProfile(outputProfile);
-}
-
-void
-AutomatorPrivate::presets()
-{
-    ui->presets->clear();
-    QDir presets(presetfrom);
-    QFileInfoList presetfiles = presets.entryInfoList(QStringList("*.json"));
-    if (presetfiles.count() > 0) {
-        for(QFileInfo presetfile : presetfiles) {
-            QSharedPointer<Preset> preset(new Preset());
-            if (preset->read(presetfile.absoluteFilePath())) {
-                ui->presets->addItem(preset->name(), QVariant::fromValue(preset));
-            }
-        }
-        activate();
-    } else {
-        ui->presets->addItem("No presets found");
-        deactivate();
-    }
 }
 
 void
@@ -359,6 +339,8 @@ AutomatorPrivate::loadSettings()
     filesfrom = settings.value("filesFrom", documents).toString();
     presetfrom = settings.value("presetFrom", documents).toString();
     saveto = settings.value("saveTo", documents).toString();
+    // ui
+    ui->saveTo->setText(saveto);
 }
 
 void
@@ -368,6 +350,42 @@ AutomatorPrivate::saveSettings()
     settings.setValue("filesFrom", filesfrom);
     settings.setValue("presetFrom", presetfrom);
     settings.setValue("saveTo", saveto);
+}
+
+void
+AutomatorPrivate::loadPresets()
+{
+    ui->presets->clear();
+    QDir presets(presetfrom);
+    QFileInfoList presetfiles = presets.entryInfoList(QStringList("*.json"));
+    
+    QString error;
+    if (presetfiles.count() > 0) {
+        for(QFileInfo presetfile : presetfiles) {
+            QSharedPointer<Preset> preset(new Preset());
+            if (preset->read(presetfile.absoluteFilePath())) {
+                ui->presets->addItem(preset->name(), QVariant::fromValue(preset));
+            } else {
+                if (error.length() > 0) {
+                    error += "\n";
+                }
+                error += QString("Could not load preset from file:\n"
+                                 "%1\n\n"
+                                 "Error:\n"
+                                 "%2\n")
+                                 .arg(presetfile.absoluteFilePath())
+                                 .arg(preset->error());
+            }
+        }
+        if (error.length() > 0) {
+            Error::showError(window.data(), "Could not load all presets", error);
+        }
+        activate();
+        
+    } else {
+        ui->presets->addItem("No presets found");
+        deactivate();
+    }
 }
 
 QString
@@ -498,7 +516,7 @@ AutomatorPrivate::jobProcessed(const QUuid& uuid)
 void
 AutomatorPrivate::refreshPresets()
 {
-    presets();
+    loadPresets();
 }
 
 void

@@ -31,6 +31,7 @@ class Preset
         virtual ~Preset();
         bool read(const QString& filename);
         bool valid() const;
+        QString error() const;
         QString filename() const;
 
     public:

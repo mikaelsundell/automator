@@ -25,6 +25,8 @@ set (app_sources
     dropfilter.cpp
     eventfilter.h
     eventfilter.cpp
+    error.h
+    error.cpp
     filedrop.h
     filedrop.cpp
     icctransform.h
@@ -50,6 +52,7 @@ set (app_sources
     question.cpp
     about.ui
     automator.ui
+    error.ui
     log.ui
     question.ui
     preferences.ui

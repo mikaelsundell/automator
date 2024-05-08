@@ -19,8 +19,8 @@ class PresetPrivate : public QObject
         bool read();
     
     public:
+        QString error;
         QString filename;
-        QString log;
         QString name;
         QList<QString> description;
         QList<Task> tasks;
@@ -42,21 +42,28 @@ PresetPrivate::read()
 {
     QFile file(filename);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        log = QString("failed to open file: %1").arg(filename);
+        error = QString("Failed to open file: %1").arg(filename);
         valid = false;
         return valid;
     }
     QByteArray jsonData = file.readAll();
     file.close();
 
-    QJsonDocument document = QJsonDocument::fromJson(jsonData);
+    QJsonParseError jsonError;
+    QJsonDocument document = QJsonDocument::fromJson(jsonData, &jsonError);
     if (document.isNull()) {
-        log = QString("failed to create json document for file: %1").arg(filename);
+        error = QString("Failed to create json document for file:\n"
+                        "%1\n\n"
+                        "Parse error:\n"
+                        "%2 at offset %3")
+                .arg(filename)
+                .arg(jsonError.errorString())
+                .arg(jsonError.offset);
         valid = false;
         return valid;
     }
     if (!document.isObject()) {
-        log = QString("json document is not an object for file: %1").arg(filename);
+        error = QString("Json document is not an object for file: %1").arg(filename);
         valid = false;
         return valid;
     }
@@ -86,14 +93,27 @@ PresetPrivate::read()
             if (!task.name.isEmpty() && !task.command.isEmpty() && !task.extension.isEmpty() && !task.arguments.isEmpty()) {
                 tasks.append(task);
             } else {
-                log = QString("json for task: %1 is not valid, must contain name, extension and arguments").arg(i);
+                error = QString("Json for task does not contain all required attributes").arg(i);
                 
-                qDebug() << "id: " << task.id;
-                qDebug() << "name: " << task.name;
-                qDebug() << "command: " << task.command;
-                qDebug() << "extension: " << task.extension;
-                qDebug() << "arguments: " << task.arguments;                
-                qDebug() << "log: " << log;
+                if (task.id.isEmpty()) {
+                    error += QString("\nMissing attribute: %1").arg("id");
+                }
+                
+                if (task.name.isEmpty()) {
+                    error += QString("\nMissing attribute: %1").arg("name");
+                }
+                
+                if (task.command.isEmpty()) {
+                    error += QString("\nMissing attribute: %1").arg("command");
+                }
+                
+                if (task.extension.isEmpty()) {
+                    error += QString("\nMissing attribute: %1").arg("extension");
+                }
+                
+                if (task.arguments.isEmpty()) {
+                    error += QString("\nMissing attribute: %1").arg("arguments");
+                }
             }
         }
     }
@@ -123,6 +143,12 @@ bool
 Preset::valid() const
 {
     return p->valid;
+}
+
+QString
+Preset::error() const
+{
+    return p->error;
 }
 
 QString

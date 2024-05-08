@@ -92,7 +92,7 @@ QueuePrivate::findNextJob() {
 void
 QueuePrivate::processNextJob()
 {
-    QtConcurrent::run([this]() {
+    QFuture<void> future = QtConcurrent::run([this]() {
         if (pendingJobs.isEmpty()) {
             return;
         }
@@ -125,10 +125,24 @@ QueuePrivate::processNextJob()
             }
             Process process;
             job->setStatus(Job::Running);
-            if (process.run(command, job->arguments(), job->startin())) {
-                job->setStatus(Job::Completed);
-                log += QString("\nStatus:\n%1\n").arg("Command completed");
+            QString standardOutput;
+            QString standardError;
+            bool failed = false;
+            if (process.exists(command)) {
+                if (process.run(command, job->arguments(), job->startin())) {
+                    job->setStatus(Job::Completed);
+                    log += QString("\nStatus:\n%1\n").arg("Command completed");
+                } else {
+                    failed = true;
+                }
+                standardOutput = process.standardOutput();
+                standardError = process.standardError();
             } else {
+                standardError = "Command does not exists, make sure command can be "
+                                "found in system or application search paths";
+                failed = true;
+            }
+            if (failed) {
                 log += QString("\nStatus:\n%1\n").arg("Command failed");
                 log += QString("\nExit code:\n%1\n").arg(process.exitCode());
                 switch(process.exitStatus())
@@ -147,13 +161,9 @@ QueuePrivate::processNextJob()
                     failCompletedJobs(job->dependson());
                 }
             }
-            
-            const QString standardOutput = process.standardOutput();
             if (!standardOutput.isEmpty()) {
                 log += QString("\nCommand output:\n%1").arg(standardOutput);
             }
-
-            const QString standardError = process.standardError();
             if (!standardError.isEmpty()) {
                 log += QString("\nCommand error:\n%1").arg(standardError);
             }

@@ -125,6 +125,7 @@ PreferencesPrivate::add()
         }
         if (!found) {
             ui->searchpaths->addItem(dir);
+            searchpathfrom = dir;
         }
     }
 }

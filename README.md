@@ -59,6 +59,42 @@ Here's an example of a preset file format, tailored for converting camera RAW fi
 
 ```
 
+
+**Supported Variables**
+
+Preset files support various variables that can be used to customize arguments during processing. These variables are dynamically replaced based on the context of the input and output files.
+
+**Input Variables:**
+
+- **`%inputdir%`**
+  Replaces the variable with the directory path of the input file.
+
+- **`%inputfile%`**
+  Replaces the variable with the full path of the input file.
+
+- **`%inputext%`**
+  Replaces the variable with the file extension of the input file.
+
+- **`%inputbase%`**
+  Replaces the variable with the base name (filename without extension) of the input file.
+
+**Output Variables:**
+
+- **`%outputdir%`**
+  Replaces the variable with the directory path of the output file.
+
+- **`%outputfile%`**
+  Replaces the variable with the full path of the output file.
+
+- **`%outputext%`**
+  Replaces the variable with the file extension of the output file.
+
+- **`%outputbase%`** 
+  Replaces the variable with the base name of the output file.
+
+Each variable is designed to simplify the scripting and automation within preset configurations, ensuring that file paths and details are handled efficiently without manual specification in every command.
+
+
 Automator Advanced
 --------
 

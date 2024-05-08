@@ -12,6 +12,7 @@ class Automator : public QMainWindow
     public:
         Automator();
         virtual ~Automator();
+
     private:
         QScopedPointer<AutomatorPrivate> p;
 };

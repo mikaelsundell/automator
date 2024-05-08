@@ -73,6 +73,14 @@ Process::run(const QString& command, const QStringList& arguments, const QString
            p->process->exitCode() == 0;
 }
 
+bool
+Process::exists(const QString& command)
+{
+    p->process->start("which", QStringList() << command);
+    return p->process->waitForFinished(-1) && p->process->exitStatus() == QProcess::NormalExit &&
+           p->process->exitCode() == 0;
+}
+
 QString
 Process::standardOutput() const
 {
