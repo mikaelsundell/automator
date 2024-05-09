@@ -103,6 +103,7 @@ class AutomatorPrivate : public QObject
         int width;
         int height;
         QSize size;
+        QString presetselected;
         QString presetfrom;
         QString saveto;
         QString filesfrom;
@@ -337,6 +338,7 @@ AutomatorPrivate::loadSettings()
     QString documents = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
     QSettings settings(MACOSX_BUNDLE_GUI_IDENTIFIER, "Automator");
     filesfrom = settings.value("filesFrom", documents).toString();
+    presetselected = settings.value("presetselected", "").toString();
     presetfrom = settings.value("presetFrom", documents).toString();
     saveto = settings.value("saveTo", documents).toString();
     // ui
@@ -348,6 +350,11 @@ AutomatorPrivate::saveSettings()
 {
     QSettings settings(MACOSX_BUNDLE_GUI_IDENTIFIER, "Automator");
     settings.setValue("filesFrom", filesfrom);
+    // presets
+    if (ui->presets->count()) {
+        QSharedPointer<Preset> preset = ui->presets->currentData().value<QSharedPointer<Preset>>();
+        settings.setValue("presetselected", preset->filename());
+    }
     settings.setValue("presetFrom", presetfrom);
     settings.setValue("saveTo", saveto);
 }
@@ -363,8 +370,12 @@ AutomatorPrivate::loadPresets()
     if (presetfiles.count() > 0) {
         for(QFileInfo presetfile : presetfiles) {
             QSharedPointer<Preset> preset(new Preset());
-            if (preset->read(presetfile.absoluteFilePath())) {
+            QString filename = presetfile.absoluteFilePath();
+            if (preset->read(filename)) {
                 ui->presets->addItem(preset->name(), QVariant::fromValue(preset));
+                if (filename == presetselected) {
+                    ui->presets->setCurrentIndex(ui->presets->count() - 1);
+                }
             } else {
                 if (error.length() > 0) {
                     error += "\n";
