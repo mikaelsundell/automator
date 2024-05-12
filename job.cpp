@@ -21,6 +21,7 @@ class JobPrivate : public QObject
         QDateTime created;
         QUuid uuid;
         QString id;
+        QString filename;
         QString name;
         QString command;
         QStringList arguments;
@@ -65,6 +66,12 @@ QString
 Job::id() const
 {
     return p->id;
+}
+
+QString
+Job::filename() const
+{
+    return p->filename;
 }
 
 QString
@@ -120,6 +127,15 @@ Job::setId(const QString& id)
 {
     if (p->id != id) {
         p->id = id;
+        jobChanged();
+    }
+}
+
+void
+Job::setFilename(const QString& filename)
+{
+    if (p->filename != filename) {
+        p->filename = filename;
         jobChanged();
     }
 }

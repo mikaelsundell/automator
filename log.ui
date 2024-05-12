@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>700</width>
+    <width>800</width>
     <height>600</height>
    </rect>
   </property>
@@ -117,7 +117,7 @@
           <bool>true</bool>
          </property>
          <property name="columnCount">
-          <number>3</number>
+          <number>4</number>
          </property>
          <attribute name="headerVisible">
           <bool>true</bool>
@@ -135,6 +135,11 @@
          <column>
           <property name="text">
            <string notr="true">3</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>4</string>
           </property>
          </column>
         </widget>

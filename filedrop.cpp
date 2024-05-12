@@ -4,19 +4,13 @@
 
 #include "filedrop.h"
 
+#include <QFileInfo>
 #include <QLabel>
-#include <QPushButton>
 #include <QVBoxLayout>
-#include <QProgressBar>
-#include <QTimer>
-
 #include <QDragEnterEvent>
 #include <QMimeData>
-#include <QWidget>
 #include <QPointer>
 #include <QStyle>
-
-#include <QDebug>
 
 class FiledropPrivate : public QObject
 {
@@ -77,14 +71,25 @@ Filedrop::dragEnterEvent(QDragEnterEvent* event)
 {
     Q_UNUSED(event);
     if (event->mimeData()->hasUrls()) {
-        event->acceptProposedAction();
         p->files.clear();
+        bool found = false;
         QList<QUrl> urls = event->mimeData()->urls();
         for (const QUrl &url : urls) {
-            p->files.append(url.toLocalFile());
+            QFileInfo fileinfo(url.toLocalFile());
+            if (fileinfo.isFile()) {
+                p->files.append(fileinfo.filePath());
+                found = true;
+            }
         }
-        setProperty("dragging", true);
-        p->update();
+        if (found) {
+            event->acceptProposedAction();
+            setProperty("dragging", true);
+            p->update();
+        } else {
+            event->ignore();
+        }
+    } else {
+        event->ignore();
     }
 }
 

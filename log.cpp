@@ -46,7 +46,7 @@ class LogPrivate : public QObject
                         // icc profile
                         ICCTransform* transform = ICCTransform::instance();
                         if (status == "Dependency" ||
-                            status == "Failed" ||
+                            status == "Failed" ||
                             status == "Cancelled") {
                             color = transform->map(QColor::fromHsl(359, 90, 60).rgb());
                         } else if (status == "Pending") {
@@ -102,14 +102,15 @@ LogPrivate::init()
     ui->items->setHeaderLabels(
         QStringList() << "Uuid"
                       << "Name"
+                      << "Filename"
                       << "Status"
     );
     ui->items->setColumnWidth(0, 280);
     ui->items->setColumnWidth(1, 250);
+    ui->items->setColumnWidth(2, 125);
+    ui->items->setColumnWidth(3, 50);
     ui->items->header()->setStretchLastSection(true);
-    
-    ui->items->setItemDelegateForColumn(2, new StatusDelegate(ui->items));
-    
+    ui->items->setItemDelegateForColumn(3, new StatusDelegate(ui->items));
     // event filter
     dialog->installEventFilter(this);
     // layout
@@ -150,30 +151,31 @@ LogPrivate::updateJob(const QUuid& uuid)
     if (itemjob->uuid() == uuid) {
         item->setText(0, itemjob->uuid().toString());
         item->setText(1, itemjob->name());
+        item->setText(2, itemjob->filename());
         switch(itemjob->status())
         {
             case Job::Pending: {
-                item->setText(2, "Pending");
+                item->setText(3, "Pending");
             }
             break;
             case Job::Running: {
-                item->setText(2, "Running");
+                item->setText(3, "Running");
             }
             break;
             case Job::Completed: {
-                item->setText(2, "Completed");
+                item->setText(3, "Completed");
             }
             break;
             case Job::Dependency: {
-                item->setText(2, "Dependency");
+                item->setText(3, "Dependency");
             }
             break;
             case Job::Failed: {
-                item->setText(2, "Failed");
+                item->setText(3, "Failed");
             }
             break;
             case Job::Cancelled: {
-                item->setText(2, "Cancelled");
+                item->setText(3, "Cancelled");
             }
             break;
         }

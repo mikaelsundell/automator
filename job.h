@@ -30,6 +30,7 @@ class Job : public QObject {
         virtual ~Job();
         QDateTime created() const;
         QString id() const;
+        QString filename() const;
         QString command() const;
         QStringList arguments() const;
         QUuid dependson() const;
@@ -39,6 +40,7 @@ class Job : public QObject {
         QString startin() const;
         Status status() const;
         void setId(const QString& id);
+        void setFilename(const QString& filename);
         void setCommand(const QString& command);
         void setArguments(const QStringList& arguments);
         void setDependson(QUuid dependson);

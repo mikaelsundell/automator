@@ -277,5 +277,6 @@ Queue::setThreads(int threads)
 {
     p->threads = threads;
     p->update();
+    p->processNextJobs();
 }
 

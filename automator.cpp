@@ -470,6 +470,7 @@ AutomatorPrivate::run(const QList<QString>& files)
             {
                 job->setUuid(QUuid::createUuid());
                 job->setId(task.id);
+                job->setFilename(inputinfo.fileName());
                 job->setName(task.name);
                 job->setCommand(command);
                 job->setArguments(argumentlist);
