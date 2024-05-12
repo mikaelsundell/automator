@@ -20,6 +20,7 @@ class JobPrivate : public QObject
     public:
         QDateTime created;
         QUuid uuid;
+        QString id;
         QString name;
         QString command;
         QStringList arguments;
@@ -58,6 +59,12 @@ QDateTime
 Job::created() const
 {
     return p->created;
+}
+
+QString
+Job::id() const
+{
+    return p->id;
 }
 
 QString
@@ -106,6 +113,15 @@ Job::Status
 Job::status() const
 {
     return p->status;
+}
+
+void
+Job::setId(const QString& id)
+{
+    if (p->id != id) {
+        p->id = id;
+        jobChanged();
+    }
 }
 
 void

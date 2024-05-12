@@ -45,11 +45,15 @@ class LogPrivate : public QObject
                         QString status = index.data().toString();
                         // icc profile
                         ICCTransform* transform = ICCTransform::instance();
-                        if (status == "Failed") {
-                            color = transform->map(QColor::fromHsl(359, 90, 40).rgb());
+                        if (status == "Dependency" ||
+                            status == "Failed" ||
+                            status == "Cancelled") {
+                            color = transform->map(QColor::fromHsl(359, 90, 60).rgb());
+                        } else if (status == "Pending") {
+                                color = transform->map(QColor::fromHsl(309, 90, 60).rgb());
                         } else if (status == "Running" ||
                                    status == "Completed") {
-                            color = transform->map(QColor::fromHsl(120, 90, 40).rgb());
+                            color = transform->map(QColor::fromHsl(120, 90, 60).rgb());
                         } else {
                             color = Qt::transparent;
                         }
@@ -158,6 +162,10 @@ LogPrivate::updateJob(const QUuid& uuid)
             break;
             case Job::Completed: {
                 item->setText(2, "Completed");
+            }
+            break;
+            case Job::Dependency: {
+                item->setText(2, "Dependency");
             }
             break;
             case Job::Failed: {

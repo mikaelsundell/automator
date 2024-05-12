@@ -55,7 +55,6 @@ ProcessPrivate::standardError()
 Process::Process()
 : p(new ProcessPrivate())
 {
-    p->init();
 }
 
 Process::~Process()
@@ -65,6 +64,7 @@ Process::~Process()
 bool
 Process::run(const QString& command, const QStringList& arguments, const QString& startin)
 {
+    p->init();
     if (startin.length()) {
         p->process->setWorkingDirectory(startin);
     }
@@ -76,6 +76,7 @@ Process::run(const QString& command, const QStringList& arguments, const QString
 bool
 Process::exists(const QString& command)
 {
+    p->init();
     p->process->start("which", QStringList() << command);
     return p->process->waitForFinished(-1) && p->process->exitStatus() == QProcess::NormalExit &&
            p->process->exitCode() == 0;

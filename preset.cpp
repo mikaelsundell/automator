@@ -90,11 +90,28 @@ PresetPrivate::read()
                     task.documentation.append(docarray[i].toString());
                 }
             }
-            if (!task.name.isEmpty() && !task.command.isEmpty() && !task.extension.isEmpty() && !task.arguments.isEmpty()) {
+            if (!task.id.isEmpty() && !task.name.isEmpty() && !task.command.isEmpty() && !task.extension.isEmpty() && !task.arguments.isEmpty()) {
+                if (task.dependson.length() > 0) {
+                    bool found = false;
+                    for (int j = 0; j < tasks.size(); ++j) {
+                        if (tasks[j].id == task.dependson) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        error = QString("Json for task: \"%1\" contains a dependson id that can not be found").arg(task.name);
+                        valid = false;
+                        return valid;
+                    }
+                }
                 tasks.append(task);
             } else {
-                error = QString("Json for task does not contain all required attributes").arg(i);
-                
+                if (task.name.length() > 0) {
+                    error = QString("Json for task: \"%1\" does not contain all required attributes").arg(task.name);
+                } else {
+                    error = QString("Json for task: %1 does not contain all required attributes").arg(i);
+                }
                 if (task.id.isEmpty()) {
                     error += QString("\nMissing attribute: %1").arg("id");
                 }
@@ -114,6 +131,8 @@ PresetPrivate::read()
                 if (task.arguments.isEmpty()) {
                     error += QString("\nMissing attribute: %1").arg("arguments");
                 }
+                valid = false;
+                return valid;
             }
         }
     }

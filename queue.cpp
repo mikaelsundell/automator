@@ -22,11 +22,12 @@ class QueuePrivate : public QObject
         void init();
         void update();
         QUuid submit(QSharedPointer<Job> job);
+        void processJob(QSharedPointer<Job> job);
         QSharedPointer<Job> findNextJob();
-        void processNextJob();
+        void processNextJobs();
         void processDependentJobs(const QUuid& dependsonUuid);
         void failDependentJobs(const QUuid& dependsonId);
-        void failCompletedJobs(const QUuid& uuid);
+        void failCompletedJobs(const QUuid& uuid, const QUuid& dependsonId);
 
     public Q_SLOTS:
         void statusChanged(const QUuid& uuid, Job::Status status);
@@ -64,15 +65,93 @@ QueuePrivate::update()
 
 QUuid
 QueuePrivate::submit(QSharedPointer<Job> job) {
-    job->setUuid(QUuid::createUuid());
+    QString log = QString("Uuid:\n"
+                          "%1\n\n"
+                          "Command:\n"
+                          "%2 %3\n")
+                          .arg(job->uuid().toString())
+                          .arg(job->command())
+                          .arg(job->arguments().join(' '));
+    job->setLog(log);
     allJobs.insert(job->uuid(), job);
     if (job->dependson().isNull() || completedJobs.contains(job->dependson())) {
         pendingJobs.append(job);
     } else {
         dependentJobs[job->dependson()].append(job);
     }
-    processNextJob();
+    processNextJobs();
     return job->uuid();
+}
+
+void
+QueuePrivate::processJob(QSharedPointer<Job> job)
+{
+    QString log = job->log();
+    QFileInfo commandInfo(job->command());
+    if (commandInfo.isAbsolute() && !commandInfo.exists()) {
+        log += QString("\nCommand error:\nCommand path could not be found: %1\n").arg(job->command());
+        job->setStatus(Job::Failed);
+    } else {
+        QString command = job->command();
+        if (!commandInfo.isAbsolute()) {
+            QSettings settings(MACOSX_BUNDLE_GUI_IDENTIFIER, "Automator");
+            QStringList searchpaths = settings.value("searchpaths", QStringList()).toStringList();
+            for(QString searchpath : searchpaths) {
+                QString filepath = QDir::cleanPath(QDir(searchpath).filePath(command));
+                if (QFile::exists(filepath)) {
+                    command = filepath;
+                    break;
+                }
+            }
+        }
+        Process process;
+        job->setStatus(Job::Running);
+        QString standardOutput;
+        QString standardError;
+        bool failed = false;
+        if (process.exists(command)) {
+            if (process.run(command, job->arguments(), job->startin())) {
+                job->setStatus(Job::Completed);
+                log += QString("\nStatus:\n%1\n").arg("Command completed");
+            } else {
+                failed = true;
+            }
+            standardOutput = process.standardOutput();
+            standardError = process.standardError();
+        } else {
+            standardError = "Command does not exists, make sure command can be "
+                            "found in system or application search paths";
+            failed = true;
+        }
+        if (failed) {
+            log += QString("\nStatus:\n%1\n").arg("Command failed");
+            log += QString("\nExit code:\n%1\n").arg(process.exitCode());
+            switch(process.exitStatus())
+            {
+                case Process::Normal: {
+                    log += QString("\nExit status:\n%1\n").arg("Normal");
+                }
+                break;
+                case Process::Crash: {
+                    log += QString("\nExit status:\n%1\n").arg("Crash");
+                }
+                break;
+            }
+            job->setStatus(Job::Failed);
+            if (!job->dependson().isNull()) {
+                failCompletedJobs(job->uuid(), job->dependson());
+            }
+        }
+        if (!standardOutput.isEmpty()) {
+            log += QString("\nCommand output:\n%1").arg(standardOutput);
+        }
+        if (!standardError.isEmpty()) {
+            log += QString("\nCommand error:\n%1").arg(standardError);
+        }
+    }
+    job->setLog(log);
+    queue->jobProcessed(job->uuid());
+    notifyStatusChanged(job->uuid(), job->status());
 }
 
 QSharedPointer<Job>
@@ -90,88 +169,27 @@ QueuePrivate::findNextJob() {
 }
 
 void
-QueuePrivate::processNextJob()
+QueuePrivate::processNextJobs()
 {
-    QFuture<void> future = QtConcurrent::run([this]() {
-        if (pendingJobs.isEmpty()) {
-            return;
+    int free =
+        QThreadPool::globalInstance()->maxThreadCount() -
+        QThreadPool::globalInstance()->activeThreadCount();
+
+    int jobsprocess = qMin(pendingJobs.size(), free);
+    if (jobsprocess == 0) {
+        return;
+    }
+    QList<QSharedPointer<Job>> jobsrun;
+    for (int i = 0; i < jobsprocess; ++i) {
+        if (!pendingJobs.isEmpty()) {
+            jobsrun.append(findNextJob());
         }
-        QSharedPointer<Job> job = findNextJob();
-        QString log = QString("Uuid:\n"
-                              "%1\n\n"
-                              "Command:\n"
-                              "%2 %3\n")
-                              .arg(job->uuid().toString())
-                              .arg(job->command())
-                              .arg(job->arguments().join(' '));
-        
-        job->setLog(log);
-        QFileInfo commandInfo(job->command());
-        if (commandInfo.isAbsolute() && !commandInfo.exists()) {
-            log += QString("\nCommand error:\nCommand path could not be found: %1\n").arg(job->command());
-            job->setStatus(Job::Failed);
-        } else {
-            QString command = job->command();
-            if (!commandInfo.isAbsolute()) {
-                QSettings settings(MACOSX_BUNDLE_GUI_IDENTIFIER, "Automator");
-                QStringList searchpaths = settings.value("searchpaths", QStringList()).toStringList();
-                for(QString searchpath : searchpaths) {
-                    QString filepath = QDir::cleanPath(QDir(searchpath).filePath(command));
-                    if (QFile::exists(filepath)) {
-                        command = filepath;
-                        break;
-                    }
-                }
-            }
-            Process process;
-            job->setStatus(Job::Running);
-            QString standardOutput;
-            QString standardError;
-            bool failed = false;
-            if (process.exists(command)) {
-                if (process.run(command, job->arguments(), job->startin())) {
-                    job->setStatus(Job::Completed);
-                    log += QString("\nStatus:\n%1\n").arg("Command completed");
-                } else {
-                    failed = true;
-                }
-                standardOutput = process.standardOutput();
-                standardError = process.standardError();
-            } else {
-                standardError = "Command does not exists, make sure command can be "
-                                "found in system or application search paths";
-                failed = true;
-            }
-            if (failed) {
-                log += QString("\nStatus:\n%1\n").arg("Command failed");
-                log += QString("\nExit code:\n%1\n").arg(process.exitCode());
-                switch(process.exitStatus())
-                {
-                    case Process::Normal: {
-                        log += QString("\nExit status:\n%1\n").arg("Normal");
-                    }
-                    break;
-                    case Process::Crash: {
-                        log += QString("\nExit status:\n%1\n").arg("Crash");
-                    }
-                    break;
-                }
-                job->setStatus(Job::Failed);
-                if (!job->dependson().isNull()) {
-                    failCompletedJobs(job->dependson());
-                }
-            }
-            if (!standardOutput.isEmpty()) {
-                log += QString("\nCommand output:\n%1").arg(standardOutput);
-            }
-            if (!standardError.isEmpty()) {
-                log += QString("\nCommand error:\n%1").arg(standardError);
-            }
-        }
-        job->setLog(log);
-        queue->jobProcessed(job->uuid());
-        notifyStatusChanged(job->uuid(), job->status());
-    });
+    }
+    for (QSharedPointer<Job>& job : jobsrun) {
+        QFuture<void> future = QtConcurrent::run([this, job]() {
+            processJob(job);
+        });
+    }
 }
 
 void
@@ -194,28 +212,32 @@ QueuePrivate::failDependentJobs(const QUuid& dependsonId) {
                                   "Command:\n"
                                   "%2 %3\n\n"
                                   "Status:\n"
-                                  "Command could not be started, dependent job failed: %4")
+                                  "Command cancelled, dependent job failed: %4")
                                   .arg(job->uuid().toString())
                                   .arg(job->command())
                                   .arg(job->arguments().join(' '))
                                   .arg(dependsonId.toString());
             job->setLog(log);
-            job->setStatus(Job::Failed);
+            job->setStatus(Job::Cancelled);
             queue->jobProcessed(job->uuid());
             notifyStatusChanged(job->uuid(), job->status());
+            failDependentJobs(job->uuid());
         }
         dependentJobs.remove(dependsonId);
     }
 }
 
 void
-QueuePrivate::failCompletedJobs(const QUuid& uuid) {
-    if (allJobs.contains(uuid)) {
-        QSharedPointer<Job> job = allJobs[uuid];
+QueuePrivate::failCompletedJobs(const QUuid& uuid, const QUuid& dependsonId) {
+    if (allJobs.contains(dependsonId)) {
+        QSharedPointer<Job> job = allJobs[dependsonId];
         QString log = job->log();
         log += QString("\nDependent error:\n%1").arg("Dependent job failed: %1").arg(uuid.toString());
         job->setLog(log);
-        job->setStatus(Job::Failed);
+        job->setStatus(Job::Dependency);
+        if (!job->dependson().isNull()) {
+            failCompletedJobs(dependsonId, job->dependson());
+        }
     }
 }
 
@@ -228,7 +250,7 @@ QueuePrivate::statusChanged(const QUuid& uuid, Job::Status status)
     } else if (status == Job::Failed) {
         failDependentJobs(uuid);
     }
-    processNextJob();
+    processNextJobs();
 }
 
 #include "queue.moc"

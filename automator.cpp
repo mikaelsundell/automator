@@ -65,6 +65,7 @@ class AutomatorPrivate : public QObject
         void openSaveto();
         void showSaveto();
         void saveToChanged(const QString& text);
+        void createFolderChanged(int state);
         void threadsChanged(int index);
         void showAbout();
         void showPreferences();
@@ -107,6 +108,7 @@ class AutomatorPrivate : public QObject
         QString presetfrom;
         QString saveto;
         QString filesfrom;
+        bool createfolders;
         QMap<QString, QList<QUuid>> processedfiles;
         QPointer<Automator> window;
         QScopedPointer<About> about;
@@ -178,6 +180,7 @@ AutomatorPrivate::init()
     connect(ui->openSaveto, &QPushButton::clicked, this, &AutomatorPrivate::openSaveto);
     connect(ui->showSaveto, &QPushButton::clicked, this, &AutomatorPrivate::showSaveto);
     connect(dropfilter.data(), &Dropfilter::textChanged, this, &AutomatorPrivate::saveToChanged);
+    connect(ui->createFolders, &QCheckBox::stateChanged, this, &AutomatorPrivate::createFolderChanged);
     connect(ui->filedrop, &Filedrop::filesDropped, this, &AutomatorPrivate::run);
     connect(ui->threads, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &AutomatorPrivate::threadsChanged);
     connect(ui->log, &QPushButton::clicked, this, &AutomatorPrivate::showLog);
@@ -341,8 +344,10 @@ AutomatorPrivate::loadSettings()
     presetselected = settings.value("presetselected", "").toString();
     presetfrom = settings.value("presetFrom", documents).toString();
     saveto = settings.value("saveTo", documents).toString();
+    createfolders = settings.value("createFolders", false).toBool();
     // ui
     ui->saveTo->setText(saveto);
+    ui->createFolders->setChecked(createfolders);
 }
 
 void
@@ -357,6 +362,7 @@ AutomatorPrivate::saveSettings()
     }
     settings.setValue("presetFrom", presetfrom);
     settings.setValue("saveTo", saveto);
+    settings.setValue("createFolders", createfolders);
 }
 
 void
@@ -435,8 +441,18 @@ AutomatorPrivate::run(const QList<QString>& files)
         QFileInfo inputinfo(file);
         for(const Task& task : preset->tasks()) {
             QString extension = replacePattern(task.extension, "input", inputinfo);
+            QString outputdir;
+            if (createfolders) {
+                outputdir =
+                    outputDir +
+                    "/" +
+                    inputinfo.baseName();
+            } else {
+                outputdir = outputDir;
+            }
+
             QString outputfile =
-                outputDir +
+                outputdir +
                 "/" +
                 inputinfo.baseName() +
                 "." +
@@ -450,44 +466,65 @@ AutomatorPrivate::run(const QList<QString>& files)
                 argument = replaceInput(argument, inputinfo, outputinfo);
             }
             QString startin = replaceInput(task.startin, inputinfo, outputinfo);
+            QSharedPointer<Job> job(new Job());
             {
-                QSharedPointer<Job> job(new Job());
+                job->setUuid(QUuid::createUuid());
+                job->setId(task.id);
                 job->setName(task.name);
                 job->setCommand(command);
                 job->setArguments(argumentlist);
                 job->setStartin(startin);
                 job->setStatus(Job::Pending);
-                
-                if (task.dependson.isEmpty()) {
-                    log->addJob(job);
-                    QUuid uuid = queue->submit(job);
-                    count++;
-                    
-                    if (!processedfiles.contains(file)) {
-                        processedfiles.insert(file, QList<QUuid>());
-                    }
-                    processedfiles[file].append(uuid);
-                    jobuuids[task.id] = uuid;
-                } else {
-                    dependentjobs.append(qMakePair(job, task.dependson));
-                }
-                
             }
+            QDir dir;
+            if (!dir.exists(outputdir)) {
+                if (!dir.mkdir(outputdir)) {
+                    QString status = QString("\nStatus:\n"
+                                             "Could not create directory: %1\n")
+                                             .arg(outputdir);
+                    job->setLog(status);
+                    job->setStatus(Job::Failed);
+                    log->addJob(job);
+                    return;
+                }
+            }
+            
+            if (task.dependson.isEmpty()) {
+                log->addJob(job);
+                QUuid uuid = queue->submit(job);
+                count++;
+                
+                if (!processedfiles.contains(file)) {
+                    processedfiles.insert(file, QList<QUuid>());
+                }
+                processedfiles[file].append(uuid);
+                jobuuids[task.id] = uuid;
+            } else {
+                dependentjobs.append(qMakePair(job, task.dependson));
+            }
+    
         }
         for (QPair<QSharedPointer<Job>, QString> depedentjob : dependentjobs) {
             QSharedPointer<Job> job = depedentjob.first;
             QString dependentid = depedentjob.second;
             if (jobuuids.contains(dependentid)) {
                 job->setDependson(jobuuids[dependentid]);
+                log->addJob(job);
+                QUuid uuid = queue->submit(job);
                 if (!processedfiles.contains(file)) {
                     processedfiles.insert(file, QList<QUuid>());
                 }
-                processedfiles[file].append(queue->submit(job));
-                log->addJob(job);
+                processedfiles[file].append(uuid);
+                jobuuids[job->id()] = uuid;
                 count++;
-                
             } else {
-                qDebug() << "Dependency not found for job: " << job->name();
+                QString status = QString("\nStatus:\n"
+                                         "Dependency not found for job: %1\n")
+                                         .arg(job->name());
+                job->setLog(status);
+                job->setStatus(Job::Failed);
+                log->addJob(job);
+                return;
             }
         }
     }
@@ -580,6 +617,12 @@ void
 AutomatorPrivate::saveToChanged(const QString& text)
 {
     saveto = text;
+}
+
+void
+AutomatorPrivate::createFolderChanged(int state)
+{
+    createfolders = (state == Qt::Checked);
 }
 
 void

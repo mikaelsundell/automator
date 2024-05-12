@@ -19,6 +19,7 @@ class Job : public QObject {
             Pending,
             Running,
             Completed,
+            Dependency,
             Failed,
             Cancelled
         };
@@ -28,6 +29,7 @@ class Job : public QObject {
         Job();
         virtual ~Job();
         QDateTime created() const;
+        QString id() const;
         QString command() const;
         QStringList arguments() const;
         QUuid dependson() const;
@@ -36,6 +38,7 @@ class Job : public QObject {
         QUuid uuid() const;
         QString startin() const;
         Status status() const;
+        void setId(const QString& id);
         void setCommand(const QString& command);
         void setArguments(const QStringList& arguments);
         void setDependson(QUuid dependson);
