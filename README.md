@@ -11,7 +11,7 @@ Automator is a user-friendly Mac application designed for batch processing files
 
 |  Download        | Description |
 | ----------------| ----------- |
-|  [<img src="resources/Download.png" valign="middle" alt="Icon" width="16" height="16"> Automator v1.0.03](https://github.com/mikaelsundell/automator/releases/download/release-v1.0.0/Automator_macOS12_arm64_release.dmg) | [Apple Silicon macOS12+](https://github.com/mikaelsundell/automator/releases/download/release-v1.0.0/Automator_macOS12_arm64_release.dmg)
+|  [<img src="resources/Download.png" valign="middle" alt="Icon" width="16" height="16"> Automator v1.0.0](https://github.com/mikaelsundell/automator/releases/download/release-v1.0.0/Automator_macOS12_arm64_release.dmg) | [Apple Silicon macOS12+](https://github.com/mikaelsundell/automator/releases/download/release-v1.0.0/Automator_macOS12_arm64_release.dmg)
 |  [<img src="resources/Download.png" valign="middle" alt="Icon" width="16" height="16"> Automator v1.0.0](https://github.com/mikaelsundell/automator/releases/download/release-v1.0.0/Automator_macOS12_x86_64_release.dmg) | [Intel x86_64 macOS12+](https://github.com/mikaelsundell/automator/releases/download/release-v1.0.0/Automator_macOS12_x86_64_release.dmg)
 
 
