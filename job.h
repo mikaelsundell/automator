@@ -16,42 +16,60 @@ class Job : public QObject {
     
     public:
         enum Status {
-            Pending,
+            Waiting,
             Running,
             Completed,
-            Dependency,
             Failed,
-            Cancelled
+            Dependency,
+            Stopped
         };
         Q_ENUM(Status)
 
     public:
         Job();
         virtual ~Job();
-        QDateTime created() const;
-        QString id() const;
-        QString filename() const;
-        QString command() const;
         QStringList arguments() const;
+        QString command() const;
+        QDateTime created() const;
         QUuid dependson() const;
-        QString log() const;
+        QString filename() const;
+        QString id() const;
         QString name() const;
-        QUuid uuid() const;
+        QString log() const;
+        QString output() const;
+        int pid() const;
+        int priority() const;
         QString startin() const;
         Status status() const;
-        void setId(const QString& id);
-        void setFilename(const QString& filename);
-        void setCommand(const QString& command);
+        QUuid uuid() const;
         void setArguments(const QStringList& arguments);
+        void setCommand(const QString& command);
         void setDependson(QUuid dependson);
+        void setFilename(const QString& filename);
+        void setId(const QString& id);
         void setLog(const QString& log);
         void setName(const QString& name);
+        void setOutput(const QString& output);
+        void setPid(int pid);
+        void setPriority(int priority);
         void setStartin(const QString& startin);
         void setStatus(Status status);
         void setUuid(QUuid uuid);
     
     Q_SIGNALS:
-        void jobChanged();
+        void argumentsChanged(const QStringList& arguments);
+        void commandChanged(const QString& command);
+        void dependsonChanged(QUuid uuid);
+        void filenameChanged(const QString& filename);
+        void idChanged(const QString& id);
+        void logChanged(const QString& log);
+        void nameChanged(const QString& name);
+        void outputChanged(const QString& output);
+        void pidChanged(int pid);
+        void priorityChanged(int priority);
+        void startinChanged(const QString& startin);
+        void statusChanged(Status status);
+        void uuidChanged(QUuid uuid);
     
     private:
         QScopedPointer<JobPrivate> p;

@@ -5,7 +5,15 @@
 
 #include "process.h"
 
+#include <unistd.h>
+#include <spawn.h>
+#include <signal.h>
+#include <crt_externs.h>
+#include <sys/stat.h>
+
+#include <QDir>
 #include <QProcess>
+#include <QThread>
 #include <QDebug>
 
 class ProcessPrivate : public QObject
@@ -14,40 +22,126 @@ class ProcessPrivate : public QObject
     public:
         ProcessPrivate();
         void init();
-    
-    public Q_SLOTS:
-        void standardOutput();
-        void standardError();
-    
+        void run(const QString& command, const QStringList& arguments, const QString& startin);
+        bool wait();
+        void kill();
+        void kill(int pid);
     public:
+        QString mapCommand(const QString& command);
+        pid_t pid;
+        int exitCode;
         QString outputBuffer;
         QString errorBuffer;
-        QScopedPointer<QProcess> process;
+        bool running;
+        int outputpipe[2];
+        int errorpipe[2];
 };
 
 ProcessPrivate::ProcessPrivate()
+: pid(-1)
+, exitCode(-1)
+, running(false)
 {
 }
 
 void
 ProcessPrivate::init()
 {
-    process.reset(new QProcess);
-    // connect
-    connect(process.data(), &QProcess::readyReadStandardOutput, this, &ProcessPrivate::standardOutput);
-    connect(process.data(), &QProcess::readyReadStandardError, this, &ProcessPrivate::standardError);
 }
 
 void
-ProcessPrivate::standardOutput()
+ProcessPrivate::run(const QString& command, const QStringList& arguments, const QString& startin)
 {
-    outputBuffer.append(process->readAllStandardOutput());
+    running = false;
+    outputBuffer.clear();
+    errorBuffer.clear();
+    QString absolutepath = mapCommand(command);
+    QList<char *> argv;
+    QByteArray commandbytes = absolutepath.toLocal8Bit();
+    argv.push_back(commandbytes.data());
+    std::vector<QByteArray> argbytes;
+    for (const QString &arg : arguments) {
+        argbytes.push_back(arg.toLocal8Bit());
+        argv.push_back(argbytes.back().data());
+    }
+    argv.push_back(nullptr);
+    posix_spawn_file_actions_t actions;
+    posix_spawn_file_actions_init(&actions);
+    pipe(outputpipe);
+    pipe(errorpipe);
+    posix_spawn_file_actions_adddup2(&actions, outputpipe[1], STDOUT_FILENO);
+    posix_spawn_file_actions_adddup2(&actions, errorpipe[1], STDERR_FILENO);
+    posix_spawn_file_actions_addclose(&actions, outputpipe[0]);
+    posix_spawn_file_actions_addclose(&actions, errorpipe[0]);
+    if (!startin.isEmpty()) {
+        chdir(startin.toLocal8Bit().data());
+    }
+    char** environ = *_NSGetEnviron();
+    int status = posix_spawn(&pid, commandbytes.data(), &actions, nullptr, argv.data(), environ);
+    posix_spawn_file_actions_destroy(&actions);
+    close(outputpipe[1]);
+    close(errorpipe[1]);
+    
+    if (status == 0) {
+        running = true;
+    } else {
+        exitCode = -1;
+    }
+}
+
+bool
+ProcessPrivate::wait()
+{
+    if (running) {
+        int status;
+        waitpid(pid, &status, 0);
+        running = false;
+        char buffer[1024];
+        ssize_t bytesread;
+        while ((bytesread = read(outputpipe[0], buffer, sizeof(buffer) - 1)) > 0) {
+            buffer[bytesread] = '\0';
+            outputBuffer.append(buffer);
+        }
+        while ((bytesread = read(errorpipe[0], buffer, sizeof(buffer) - 1)) > 0) {
+            buffer[bytesread] = '\0';
+            errorBuffer.append(buffer);
+        }
+        close(outputpipe[0]);
+        close(errorpipe[0]);
+        if (WIFEXITED(status)) {
+            exitCode = WEXITSTATUS(status);
+        } else if (WIFSIGNALED(status)) {
+            exitCode = -WTERMSIG(status);
+        } else {
+            exitCode = -1;
+        }
+        return exitCode == 0;
+    }
+    return false;
 }
 
 void
-ProcessPrivate::standardError()
+ProcessPrivate::kill()
 {
-    errorBuffer.append(process->readAllStandardError());
+    if (running) {
+        ::kill(pid, SIGKILL);
+        wait();
+    }
+}
+
+QString
+ProcessPrivate::mapCommand(const QString& command)
+{
+    QString pathenv = QString::fromLocal8Bit(getenv("PATH"));
+    QStringList paths = pathenv.split(':');
+    for (const QString& path : paths) {
+        QString fullPath = path + "/" + command;
+        struct stat buffer;
+        if (stat(fullPath.toLocal8Bit().data(), &buffer) == 0 && (buffer.st_mode & S_IXUSR)) {
+            return fullPath;
+        }
+    }
+    return command;
 }
 
 #include "process.moc"
@@ -61,25 +155,36 @@ Process::~Process()
 {
 }
 
-bool
+void
 Process::run(const QString& command, const QStringList& arguments, const QString& startin)
 {
-    p->init();
-    if (startin.length()) {
-        p->process->setWorkingDirectory(startin);
-    }
-    p->process->start(command, arguments);
-    return p->process->waitForFinished(-1) && p->process->exitStatus() == QProcess::NormalExit &&
-           p->process->exitCode() == 0;
+    p->run(command, arguments, startin);
+}
+
+bool
+Process::wait()
+{
+    return p->wait();
 }
 
 bool
 Process::exists(const QString& command)
 {
-    p->init();
-    p->process->start("which", QStringList() << command);
-    return p->process->waitForFinished(-1) && p->process->exitStatus() == QProcess::NormalExit &&
-           p->process->exitCode() == 0;
+    Process process;
+    process.run("which", QStringList() << command, "");
+    return process.wait();
+}
+
+void
+Process::kill()
+{
+    p->kill();
+}
+
+int
+Process::pid() const
+{
+    return p->pid;
 }
 
 QString
@@ -97,16 +202,17 @@ Process::standardError() const
 int
 Process::exitCode() const
 {
-    return p->process->exitCode();
+    return p->exitCode;
 }
 
 Process::Status
 Process::exitStatus() const
 {
-    if (p->process->exitStatus() == QProcess::NormalExit) {
-        return Process::Normal;
-    } else {
-        return Process::Crash;
-    }
+    return (p->exitCode == 0) ? Process::Normal : Process::Crash;
 }
 
+void
+Process::kill(int pid)
+{
+    ::kill(pid, SIGKILL);
+}

@@ -103,5 +103,26 @@ namespace mac
     {
         return grabIccProfile(wid).displayProfileUrl;
     }
+
+    void pause(const QProcess& process)
+    {
+        if (process.state() == QProcess::Running) {
+            pid_t pid = process.processId();
+            if (pid > 0) {
+                kill(pid, SIGSTOP);
+            }
+        }
+    }
+
+    void resume(const QProcess& process)
+    {
+        if (process.state() == QProcess::Running) {
+            pid_t pid = process.processId();
+            if (pid > 0) {
+                kill(pid, SIGCONT);
+            }
+        }
+    }
+
 }
 

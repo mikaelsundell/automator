@@ -6,17 +6,18 @@
 
 #include <QTreeWidget>
 
-class LogTreePrivate;
-class LogTree : public QTreeWidget
+class JobTreePrivate;
+class JobTree : public QTreeWidget
 {
     Q_OBJECT
     public:
-        LogTree(QWidget* parent = nullptr);
-        virtual ~LogTree();
+        JobTree(QWidget* parent = nullptr);
+        virtual ~JobTree();
     
     protected:
+        void keyPressEvent(QKeyEvent* event) override;
         void mousePressEvent(QMouseEvent *event) override;
     
     private:
-        QScopedPointer<LogTreePrivate> p;
+        QScopedPointer<JobTreePrivate> p;
 };

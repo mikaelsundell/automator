@@ -95,7 +95,7 @@
         </sizepolicy>
        </property>
        <property name="text">
-        <string>TextLabel</string>
+        <string/>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
@@ -126,16 +126,16 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="no">
+      <widget class="QPushButton" name="yes">
        <property name="text">
-        <string>No</string>
+        <string>Yes</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="yes">
+      <widget class="QPushButton" name="no">
        <property name="text">
-        <string>Yes</string>
+        <string>No</string>
        </property>
       </widget>
      </item>

@@ -8,6 +8,8 @@ machine_arch=$(uname -m)
 macos_version=$(sw_vers -productVersion)
 major_version=$(echo "$macos_version" | cut -d '.' -f 1)
 
+echo "xx major_version ${major_version}"
+
 # signing
 sign_code=OFF
 code_sign_identity=""
@@ -40,6 +42,21 @@ fi
 export MACOSX_DEPLOYMENT_TARGET=$major_version
 export CMAKE_OSX_DEPLOYMENT_TARGET=$major_version
 
+# exit on error
+set -e 
+
+# clear
+clear
+
+# build type
+if [ "$build_type" != "debug" ] && [ "$build_type" != "release" ] && [ "$build_type" != "all" ]; then
+    echo "invalid build type: $build_type (use 'debug', 'release', or 'all')"
+    exit 1
+fi
+
+echo "Building Automator for $build_type"
+echo "---------------------------------"
+
 # signing
 if [ "$sign_code" == "ON" ]; then
     default_code_sign_identity=${CODE_SIGN_IDENTITY:-}
@@ -56,21 +73,6 @@ if [ "$sign_code" == "ON" ]; then
     read -p "Enter Development Team ID [$default_development_team_id]: " input_development_team_id
     development_team_id=${input_development_team_id:-$default_development_team_id}
 fi
-
-# exit on error
-set -e 
-
-# clear
-clear
-
-# build type
-if [ "$build_type" != "debug" ] && [ "$build_type" != "release" ] && [ "$build_type" != "all" ]; then
-    echo "invalid build type: $build_type (use 'debug', 'release', or 'all')"
-    exit 1
-fi
-
-echo "Building Automator for $build_type"
-echo "---------------------------------"
 
 # check if cmake is in the path
 if ! command -v cmake &> /dev/null; then
@@ -119,7 +121,7 @@ build_automator() {
     xcode_type=$(echo "$build_type" | awk '{ print toupper(substr($0, 1, 1)) tolower(substr($0, 2)) }')
 
     # build
-    cmake .. -DCMAKE_MODULE_PATH="$script_dir/modules" -DCMAKE_PREFIX_PATH="$prefix" -G Xcode
+    cmake .. -DMACOSX_DEPLOYMENT_TARGET="$CMAKE_OSX_DEPLOYMENT_TARGET" -DCMAKE_MODULE_PATH="$script_dir/modules" -DCMAKE_PREFIX_PATH="$prefix" -G Xcode
     if [ "$deploy" == "ON" ]; then
         cmake --build . --config $xcode_type --parallel
 

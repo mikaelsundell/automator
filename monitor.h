@@ -8,15 +8,14 @@
 
 #include <QDialog>
 
-class LogPrivate;
-class Log : public QDialog
+class MonitorPrivate;
+class Monitor : public QDialog
 {
     Q_OBJECT
     public:
-        Log(QWidget* parent = nullptr);
-        virtual ~Log();
-        void addJob(QSharedPointer<Job> job);
+        Monitor(QWidget* parent = nullptr);
+        virtual ~Monitor();
     
     private:
-        QScopedPointer<LogPrivate> p;
+        QScopedPointer<MonitorPrivate> p;
 };

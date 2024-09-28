@@ -20,12 +20,18 @@ class Process : public QObject {
     public:
         Process();
         virtual ~Process();
-        bool run(const QString& command, const QStringList& arguments, const QString& startin);
+        void run(const QString& command, const QStringList& arguments, const QString& startin = QString());
+        bool wait();
         bool exists(const QString& command);
+        void kill();
+        int pid() const;
         QString standardOutput() const;
         QString standardError() const;
         int exitCode() const;
         Status exitStatus() const;
+    
+    public:
+        static void kill(int pid);
     
     private:
         QScopedPointer<ProcessPrivate> p;

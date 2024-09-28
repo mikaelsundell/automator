@@ -17,7 +17,7 @@ set (CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 find_package( Lcms2 REQUIRED )
 
-# sources
+# sourcesld
 set (app_sources
     automator.h
     automator.cpp
@@ -33,13 +33,13 @@ set (app_sources
     icctransform.cpp
     job.h
     job.cpp
-    log.h
-    log.cpp
-    logtree.h
-    logtree.cpp
+    jobtree.h
+    jobtree.cpp
     mac.h
     mac.mm
     main.cpp
+    monitor.h
+    monitor.cpp
     preferences.h
     preferences.cpp
     preset.h
@@ -53,9 +53,10 @@ set (app_sources
     about.ui
     automator.ui
     error.ui
-    log.ui
+    monitor.ui
     question.ui
     preferences.ui
+    progressbar.ui
     automator.qrc
 )
 
@@ -74,7 +75,7 @@ file( GLOB app_presets
 
 # bundle
 set (bundle_sources
-    "resources/MacOSXBundle.plist.in"
+    "${CMAKE_SOURCE_DIR}/resources/MacOSXBundle.plist.in"
 )
 
 if (APPLE)
@@ -83,11 +84,11 @@ if (APPLE)
     set (MACOSX_BUNDLE_INFO_STRING ${project_name})
     set (MACOSX_BUNDLE_BUNDLE_NAME ${project_name})
     set (MACOSX_BUNDLE_ICON_FILE AppIcon.icns)
-    set (MACOSX_BUNDLE_LONG_VERSION_STRING "1.0.0")
+    set (MACOSX_BUNDLE_LONG_VERSION_STRING "1.0.1")
     set (MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0")
     set (MACOSX_BUNDLE_BUNDLE_VERSION "1.0")
     set (MACOSX_BUNDLE_COPYRIGHT "Copyright 2022-present Contributors to the ${project_name} project")
-    set (MACOSX_DEPLOYMENT_TARGET ${DEPLOYMENT_TARGET})
+    set (MACOSX_DEPLOYMENT_TARGET ${CMAKE_OSX_DEPLOYMENT_TARGET})
     set (CMAKE_XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS "-o linker-signed")
     set_source_files_properties(${app_resources} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
     set_source_files_properties(${app_presets} PROPERTIES MACOSX_PACKAGE_LOCATION "Presets")
@@ -97,24 +98,19 @@ if (APPLE)
     add_definitions(-DMACOSX_BUNDLE_COPYRIGHT="${MACOSX_BUNDLE_COPYRIGHT}")
     add_definitions(-DMACOSX_BUNDLE_LONG_VERSION_STRING="${MACOSX_BUNDLE_LONG_VERSION_STRING}")
     add_definitions(-DGITHUBURL="https://github.com/mikaelsundell/automator")
-    # code signing
-    if (SIGN_CODE)
-        if (CODE_SIGN_IDENTITY STREQUAL "" OR DEVELOPMENT_TEAM_ID STREQUAL "")
-            message( FATAL_ERROR "Code signing is enabled, but CODE_SIGN_IDENTITY or DEVELOPMENT_TEAM_ID is not set.")
-        else ()
-            message("Code signing enabled for Xcode")
-            message("  Sign identify: ${CODE_SIGN_IDENTITY}")
-            message("  Development team: ${DEVELOPMENT_TEAM_ID}")
-        endif()
+    set_target_properties(${project_name} PROPERTIES
+        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${MACOSX_BUNDLE_GUI_IDENTIFIER}"
+        XCODE_ATTRIBUTE_MACOSX_DEPLOYMENT_TARGET ${CMAKE_OSX_DEPLOYMENT_TARGET}
+        MACOSX_BUNDLE_INFO_PLIST ${bundle_sources}
+    )
+    if (NOT PROVISIONING_PROFILE STREQUAL "")
         set_target_properties(${project_name} PROPERTIES
-            XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "${CODE_SIGN_IDENTITY}"
-            XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "${DEVELOPMENT_TEAM_ID}"
-            XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${MACOSX_BUNDLE_GUI_IDENTIFIER}"
+            XCODE_ATTRIBUTE_PROVISIONING_PROFILE_SPECIFIER "${PROVISIONING_PROFILE}"
         )
     endif()
     set_target_properties(${project_name} PROPERTIES
         OUTPUT_NAME ${project_name}
-        MACOSX_FRAMEWORK_INFO_PLIST ${bundle_sources})
+    )
     target_compile_options (${project_name} PRIVATE -Wno-deprecated-register)
     target_include_directories (${project_name} PRIVATE ${LCMS2_INCLUDE_DIR})
     target_link_libraries (${project_name} 
