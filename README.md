@@ -26,7 +26,7 @@ Begin by selecting a preset, then drag and drop your files onto the designated f
 
 A preset file articulates a sequence of tasks to be executed during file processing. It allows for the specification of commands, file extensions, arguments, and initial directories. Additionally, it supports the definition of dependencies among tasks using the dependson attribute, enabling complex processing chains.
 
-Here's an example of a preset file format, tailored for converting camera RAW files:
+Here's an example of a preset file format, tailored for converting image files:
 
 
 ```shell
