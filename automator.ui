@@ -840,8 +840,8 @@
     </property>
     <addaction name="addfiles"/>
    </widget>
-   <addaction name="menuHelp"/>
    <addaction name="menuEdit"/>
+   <addaction name="menuHelp"/>
   </widget>
   <action name="copyRGBAsText">
    <property name="text">

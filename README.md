@@ -7,7 +7,7 @@ Introduction
 
 <img src="resources/Automator.png" style="padding-bottom: 20px;" />
 
-Automator is a user-friendly Mac application designed for batch processing files according to predefined job descriptions. It enables the creation of versatile tool chains to facilitate drag-and-drop processing, streamlining workflows for efficiency and ease of use. The application boasts a straightforward drag-and-drop interface for file submission, complemented by a dedicated log window. This window provides real-time monitoring of processing progress, ensuring users can track each step of their workflow with clarity and precision.
+Automator is a user-friendly Mac application designed for batch processing files according to predefined job descriptions. It enables the creation of tool chains for drag-and-drop processing, streamlining workflows for efficiency and ease of use. The application boasts a straightforward drag-and-drop interface for file submission, monitoring and job control.
 
 |  Download        | Description |
 | ----------------| ----------- |
