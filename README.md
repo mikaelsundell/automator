@@ -31,35 +31,49 @@ Here's an example of a preset file format, tailored for converting camera RAW fi
 
 ```shell
 {
-  "name": "Convert Camera RAW",
+  "name": "Convert image using sips",
   "tasks": [
     {
       "id": "@1",
-      "name": "Convert Camera RAW",
-      "command": "/Volumes/Build/pipeline/bin/dcraw_emu",
-      "extension": "%inputext%.tiff",
-      "arguments": "-T -4 -h -W -o 7 -q 3 -H 0 -b 1.0 -6 -v %inputfile%",
-      "startin": "/Volumes/Build/pipeline/bin",
+      "name": "Convert to JPEG",
+      "command": "sips",
+      "extension": "jpg",
+      "arguments": "-s format jpeg %inputfile% --out %outputdir%/%outputbase%.%outputext%",
+      "startin": "",
       "documentation": [
-        "-T, write TIFF instead of PPM",
-        "-4, Linear 16-bit",
-        "-h, Half-size color image",
-        "-w, Don't automatically brighten the image",
-        "-o, Output colorspace is DCI-P3",
-        "-q, AHD interpolation preserving the homogeneity of the color regions",
-        "-H, Clip highlights",
-        "-b, Adjust brightness standard 1.0",
-        "-6, Write 16-bit output"
+        "sips -s format jpeg inputfile --out outputfile",
+        "Converts the input file to JPEG format using the sips command",
+        "-s format jpeg: Specifies the format to convert to",
+        "--out: Specifies the output file path"
       ]
     },
     {
-      "name": "Change the name to 16-bit tiff only",
-      "extension": "tiff",
-      "command": "mv",
-      "arguments": "%inputfile%.tiff %outputdir%/%outputbase%.%outputext%",
-      "dependson": "@1"
+      "id": "@2",
+      "name": "Adjust JPEG quality",
+      "command": "sips",
+      "extension": "jpg",
+      "arguments": "--setProperty formatOptions 80 %outputdir%/%outputbase%.%outputext%",
+      "dependson": "@1",
+      "documentation": [
+        "sips --setProperty formatOptions 80 outputfile",
+        "Adjusts the JPEG quality to 80 (out of 100)",
+        "--setProperty formatOptions: Sets the JPEG quality level"
+      ]
+    },
+    {
+      "id": "@3",
+      "name": "Generate thumbnail",
+      "command": "sips",
+      "extension": "jpg",
+      "arguments": "--resampleWidth 200 %outputdir%/%outputbase%.%outputext% --out %outputdir%/%outputbase%_thumbnail.%outputext%",
+      "dependson": "@2",
+      "documentation": [
+        "sips --resampleWidth 200 outputfile --out thumbnailfile",
+        "Generates a thumbnail by resizing the width to 200 pixels",
+        "--resampleWidth: Specifies the width of the thumbnail",
+        "--out: Specifies the output file path for the thumbnail"
+      ]
     }
-    
   ]
 }
 
