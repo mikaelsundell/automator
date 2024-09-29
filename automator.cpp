@@ -540,9 +540,6 @@ AutomatorPrivate::jobProcessed(const QUuid& uuid)
             found = true;
         }
     }
-    
-    qDebug() << "processedfiles: " << processedfiles.size();
-    
     if (found) { // test if dropped
         int value = ui->fileprogress->value() + 1;
         if (value == ui->fileprogress->maximum()) {

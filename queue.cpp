@@ -102,8 +102,6 @@ QueuePrivate::submit(QSharedPointer<Job> job)
     }
     processNextJobs();
     processRemovedJobs();
-    
-    
     queue->jobSubmitted(job);
     return job->uuid();
 }

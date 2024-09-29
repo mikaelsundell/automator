@@ -21,6 +21,7 @@ class ProcessPrivate : public QObject
     Q_OBJECT
     public:
         ProcessPrivate();
+        ~ProcessPrivate();
         void init();
         void run(const QString& command, const QStringList& arguments, const QString& startin);
         bool wait();
@@ -44,6 +45,12 @@ ProcessPrivate::ProcessPrivate()
 {
 }
 
+ProcessPrivate::~ProcessPrivate()
+{
+    if (outputpipe[0] != -1) close(outputpipe[0]);
+    if (errorpipe[0] != -1) close(errorpipe[0]);
+}
+
 void
 ProcessPrivate::init()
 {
@@ -65,27 +72,38 @@ ProcessPrivate::run(const QString& command, const QStringList& arguments, const 
         argv.push_back(argbytes.back().data());
     }
     argv.push_back(nullptr);
+
     posix_spawn_file_actions_t actions;
     posix_spawn_file_actions_init(&actions);
-    pipe(outputpipe);
-    pipe(errorpipe);
+
+    // Check if pipes are created successfully
+    if (pipe(outputpipe) == -1 || pipe(errorpipe) == -1) {
+        qDebug() << "Error creating pipes";
+        return;  // Handle pipe creation failure
+    }
+
     posix_spawn_file_actions_adddup2(&actions, outputpipe[1], STDOUT_FILENO);
     posix_spawn_file_actions_adddup2(&actions, errorpipe[1], STDERR_FILENO);
     posix_spawn_file_actions_addclose(&actions, outputpipe[0]);
     posix_spawn_file_actions_addclose(&actions, errorpipe[0]);
+
     if (!startin.isEmpty()) {
         chdir(startin.toLocal8Bit().data());
     }
+
     char** environ = *_NSGetEnviron();
     int status = posix_spawn(&pid, commandbytes.data(), &actions, nullptr, argv.data(), environ);
     posix_spawn_file_actions_destroy(&actions);
+
+    // Close write ends of pipes immediately after spawning the process
     close(outputpipe[1]);
     close(errorpipe[1]);
-    
+
     if (status == 0) {
         running = true;
     } else {
         exitCode = -1;
+        qDebug() << "Process failed to start";
     }
 }
 
@@ -98,16 +116,22 @@ ProcessPrivate::wait()
         running = false;
         char buffer[1024];
         ssize_t bytesread;
-        while ((bytesread = read(outputpipe[0], buffer, sizeof(buffer) - 1)) > 0) {
-            buffer[bytesread] = '\0';
-            outputBuffer.append(buffer);
+        if (outputpipe[0] != -1) {
+            while ((bytesread = read(outputpipe[0], buffer, sizeof(buffer) - 1)) > 0) {
+                buffer[bytesread] = '\0';
+                outputBuffer.append(buffer);
+            }
+            close(outputpipe[0]);
+            outputpipe[0] = -1;
         }
-        while ((bytesread = read(errorpipe[0], buffer, sizeof(buffer) - 1)) > 0) {
-            buffer[bytesread] = '\0';
-            errorBuffer.append(buffer);
+        if (errorpipe[0] != -1) {
+            while ((bytesread = read(errorpipe[0], buffer, sizeof(buffer) - 1)) > 0) {
+                buffer[bytesread] = '\0';
+                errorBuffer.append(buffer);
+            }
+            close(errorpipe[0]);
+            errorpipe[0] = -1;
         }
-        close(outputpipe[0]);
-        close(errorpipe[0]);
         if (WIFEXITED(status)) {
             exitCode = WEXITSTATUS(status);
         } else if (WIFSIGNALED(status)) {

@@ -61,13 +61,6 @@ Job::Job()
 
 Job::~Job()
 {
-    static int deleted = 0;
-    deleted++;
-    
-    qDebug() << "Job::~Job()";
-    qDebug() << "- name: " << p->name;
-    qDebug() << "- deleted: " << deleted;
-
 }
 
 QStringList
