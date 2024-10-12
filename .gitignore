@@ -1,4 +1,4 @@
+build*
 *.dmg
 .DS_Store
 .vscode
-build/
