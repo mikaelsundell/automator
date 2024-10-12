@@ -345,11 +345,13 @@ AutomatorPrivate::eventFilter(QObject* object, QEvent* event)
 void
 AutomatorPrivate::loadSettings()
 {
+    QDir applicationPath(QApplication::applicationDirPath());
     QString documents = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    QString presets = applicationPath.absolutePath() + "/../Presets";
     QSettings settings(MACOSX_BUNDLE_GUI_IDENTIFIER, "Automator");
     filesfrom = settings.value("filesFrom", documents).toString();
     presetselected = settings.value("presetselected", "").toString();
-    presetfrom = settings.value("presetFrom", documents).toString();
+    presetfrom = settings.value("presetFrom", presets).toString();
     saveto = settings.value("saveTo", documents).toString();
     createfolders = settings.value("createFolders", false).toBool();
     // ui
