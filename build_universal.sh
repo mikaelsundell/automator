@@ -190,7 +190,8 @@ build_automator() {
     fi
 
     cp -RP "$arm64_app" "$build_app"
-
+    xattr -rc "$build_app"
+    
     if [ -n "$mac_developer_identity" ]; then
         if [ "$sign_code" == "ON" ]; then
             # entitlements
@@ -226,4 +227,4 @@ build_automator() {
     fi
 }
 
-build_automator s"${build_apps[@]}"
+build_automator "${build_apps[@]}"
