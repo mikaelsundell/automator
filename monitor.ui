@@ -141,7 +141,7 @@
             <string>...</string>
            </property>
            <property name="icon">
-            <iconset resource="automator.qrc">
+            <iconset resource="jobman.qrc">
              <normaloff>:/icons/resources/Start.png</normaloff>:/icons/resources/Start.png</iconset>
            </property>
           </widget>
@@ -158,7 +158,7 @@
             <string>...</string>
            </property>
            <property name="icon">
-            <iconset resource="automator.qrc">
+            <iconset resource="jobman.qrc">
              <normaloff>:/icons/resources/Stop.png</normaloff>:/icons/resources/Stop.png</iconset>
            </property>
           </widget>
@@ -175,7 +175,7 @@
             <string>...</string>
            </property>
            <property name="icon">
-            <iconset resource="automator.qrc">
+            <iconset resource="jobman.qrc">
              <normaloff>:/icons/resources/Restart.png</normaloff>:/icons/resources/Restart.png</iconset>
            </property>
           </widget>
@@ -192,7 +192,7 @@
             <string>...</string>
            </property>
            <property name="icon">
-            <iconset resource="automator.qrc">
+            <iconset resource="jobman.qrc">
              <normaloff>:/icons/resources/Priority.png</normaloff>:/icons/resources/Priority.png</iconset>
            </property>
           </widget>
@@ -209,7 +209,7 @@
             <string>...</string>
            </property>
            <property name="icon">
-            <iconset resource="automator.qrc">
+            <iconset resource="jobman.qrc">
              <normaloff>:/icons/resources/Delete.png</normaloff>:/icons/resources/Delete.png</iconset>
            </property>
           </widget>
@@ -251,7 +251,7 @@
             <string>...</string>
            </property>
            <property name="icon">
-            <iconset resource="automator.qrc">
+            <iconset resource="jobman.qrc">
              <normaloff>:/icons/resources/Running.png</normaloff>:/icons/resources/Running.png</iconset>
            </property>
           </widget>
@@ -265,7 +265,7 @@
             <string>...</string>
            </property>
            <property name="icon">
-            <iconset resource="automator.qrc">
+            <iconset resource="jobman.qrc">
              <normaloff>:/icons/resources/Stopped.png</normaloff>:/icons/resources/Stopped.png</iconset>
            </property>
           </widget>
@@ -282,7 +282,7 @@
             <string>...</string>
            </property>
            <property name="icon">
-            <iconset resource="automator.qrc">
+            <iconset resource="jobman.qrc">
              <normaloff>:/icons/resources/Restore.png</normaloff>:/icons/resources/Restore.png</iconset>
            </property>
           </widget>
@@ -299,7 +299,7 @@
             <string>...</string>
            </property>
            <property name="icon">
-            <iconset resource="automator.qrc">
+            <iconset resource="jobman.qrc">
              <normaloff>:/icons/resources/Cleanup.png</normaloff>:/icons/resources/Cleanup.png</iconset>
            </property>
           </widget>
@@ -471,7 +471,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="automator.qrc"/>
+  <include location="jobman.qrc"/>
  </resources>
  <connections/>
 </ui>

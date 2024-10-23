@@ -1,18 +1,18 @@
-# <img src="resources/AppIcon.png" valign="middle" alt="Icon" width="50" height="50"> Automator #
+# <img src="resources/AppIcon.png" valign="middle" alt="Icon" width="50" height="50"> Jobman #
 
-[![License](https://img.shields.io/badge/license-BSD%203--Clause-blue.svg?style=flat-square)](https://github.com/mikaelsundell/automator/blob/master/README.md)
+[![License](https://img.shields.io/badge/license-BSD%203--Clause-blue.svg?style=flat-square)](https://github.com/mikaelsundell/jobman/blob/master/README.md)
 
 Introduction
 ------------
 
-<img src="resources/Automator.png" style="padding-bottom: 20px;" />
+<img src="resources/Jobman.png" style="padding-bottom: 20px;" />
 
-Automator is a user-friendly Mac application designed for batch processing files according to predefined job descriptions. It enables the creation of tool chains for drag-and-drop processing, streamlining workflows for efficiency and ease of use. The application boasts a straightforward drag-and-drop interface for file submission, monitoring and job control.
+Jobman is a user-friendly Mac application designed for batch processing files according to predefined job descriptions. It enables the creation of tool chains for drag-and-drop processing, streamlining workflows for efficiency and ease of use. The application boasts a straightforward drag-and-drop interface for file submission, monitoring and job control.
 
 |  Download        | Description |
 | ----------------| ----------- |
-|  [<img src="resources/Download.png" valign="middle" alt="Icon" width="16" height="16"> Automator v1.0.0](https://github.com/mikaelsundell/automator/releases/download/release-v1.0.0/Automator_macOS12_arm64_release.dmg) | [Apple Silicon macOS12+](https://github.com/mikaelsundell/automator/releases/download/release-v1.0.0/Automator_macOS12_arm64_release.dmg)
-|  [<img src="resources/Download.png" valign="middle" alt="Icon" width="16" height="16"> Automator v1.0.0](https://github.com/mikaelsundell/automator/releases/download/release-v1.0.0/Automator_macOS12_x86_64_release.dmg) | [Intel x86_64 macOS12+](https://github.com/mikaelsundell/automator/releases/download/release-v1.0.0/Automator_macOS12_x86_64_release.dmg)
+|  [<img src="resources/Download.png" valign="middle" alt="Icon" width="16" height="16"> Jobman v1.0.0](https://github.com/mikaelsundell/jobman/releases/download/release-v1.0.0/Jobman_macOS12_arm64_release.dmg) | [Apple Silicon macOS12+](https://github.com/mikaelsundell/jobman/releases/download/release-v1.0.0/Jobman_macOS12_arm64_release.dmg)
+|  [<img src="resources/Download.png" valign="middle" alt="Icon" width="16" height="16"> Jobman v1.0.0](https://github.com/mikaelsundell/jobman/releases/download/release-v1.0.0/Jobman_macOS12_x86_64_release.dmg) | [Intel x86_64 macOS12+](https://github.com/mikaelsundell/jobman/releases/download/release-v1.0.0/Jobman_macOS12_x86_64_release.dmg)
 
 
 Documentation
@@ -20,7 +20,7 @@ Documentation
 
 **Getting Started**
 
-Begin by selecting a preset, then drag and drop your files onto the designated file drop area within Automator. The application will automatically commence processing your files in accordance with the chosen preset's specifications and associated tasks.
+Begin by selecting a preset, then drag and drop your files onto the designated file drop area within Jobman. The application will automatically commence processing your files in accordance with the chosen preset's specifications and associated tasks.
 
 **Understanding preset file format**
 
@@ -105,7 +105,7 @@ Preset files support various variables that can be used to customize arguments d
 Each variable is designed to simplify the scripting and automation within preset configurations, ensuring that file paths and details are handled efficiently without manual specification in every command.
 
 
-Automator Advanced
+Jobman Advanced
 --------
 
 ## Build configuration ##
@@ -126,8 +126,8 @@ For deployment into a Disk Image (DMG), include the --deploy flag along with you
 Web Resources
 -------------
 
-* GitHub page:        https://github.com/mikaelsundell/automator
-* Issues              https://github.com/mikaelsundell/automator/issues
+* GitHub page:        https://github.com/mikaelsundell/jobman
+* Issues              https://github.com/mikaelsundell/jobman/issues
 
 Copyright
 ---------

@@ -1,6 +1,6 @@
-// Copyright 2022-present Contributors to the automator project.
+// Copyright 2022-present Contributors to the jobman project.
 // SPDX-License-Identifier: BSD-3-Clause
-// https://github.com/mikaelsundell/automator
+// https://github.com/mikaelsundell/jobman
 
 #include "queue.h"
 #include "process.h"
@@ -238,7 +238,7 @@ QueuePrivate::processJob(QSharedPointer<Job> job)
     } else {
         QString command = job->command();
         if (!commandInfo.isAbsolute()) {
-            QSettings settings(MACOSX_BUNDLE_GUI_IDENTIFIER, "Automator");
+            QSettings settings(MACOSX_BUNDLE_GUI_IDENTIFIER, "Jobman");
             QStringList searchpaths = settings.value("searchpaths", QStringList()).toStringList();
             for(QString searchpath : searchpaths) {
                 QString filepath = QDir::cleanPath(QDir(searchpath).filePath(command));

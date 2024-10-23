@@ -1,6 +1,6 @@
-// Copyright 2022-present Contributors to the automator project.
+// Copyright 2022-present Contributors to the jobman project.
 // SPDX-License-Identifier: BSD-3-Clause
-// https://github.com/mikaelsundell/automator
+// https://github.com/mikaelsundell/jobman
 
 #include "preferences.h"
 
@@ -74,7 +74,7 @@ void
 PreferencesPrivate::loadSettings()
 {
     QString documents = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
-    QSettings settings(MACOSX_BUNDLE_GUI_IDENTIFIER, "Automator");
+    QSettings settings(MACOSX_BUNDLE_GUI_IDENTIFIER, "Jobman");
     searchpathfrom = settings.value("searchpathFrom", documents).toString();
     searchpaths = settings.value("searchpaths", documents).toStringList();
 }
@@ -82,7 +82,7 @@ PreferencesPrivate::loadSettings()
 void
 PreferencesPrivate::saveSettings()
 {
-    QSettings settings(MACOSX_BUNDLE_GUI_IDENTIFIER, "Automator");
+    QSettings settings(MACOSX_BUNDLE_GUI_IDENTIFIER, "Jobman");
     settings.setValue("searchpathFrom", searchpathfrom);
     searchpaths.clear();
     for (int i = 0; i < ui->searchpaths->count(); ++i) {

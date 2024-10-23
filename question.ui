@@ -76,7 +76,7 @@
            <string/>
           </property>
           <property name="pixmap">
-           <pixmap resource="automator.qrc">:/icons/resources/AppIcon.png</pixmap>
+           <pixmap resource="jobman.qrc">:/icons/resources/AppIcon.png</pixmap>
           </property>
           <property name="scaledContents">
            <bool>true</bool>
@@ -157,8 +157,8 @@
   </layout>
  </widget>
  <resources>
-  <include location="automator.qrc"/>
-  <include location="automator.qrc"/>
+  <include location="jobman.qrc"/>
+  <include location="jobman.qrc"/>
  </resources>
  <connections>
   <connection>

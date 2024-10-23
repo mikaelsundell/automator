@@ -1,8 +1,8 @@
-// Copyright 2022-present Contributors to the automator project.
+// Copyright 2022-present Contributors to the jobman project.
 // SPDX-License-Identifier: BSD-3-Clause
-// https://github.com/mikaelsundell/automator
+// https://github.com/mikaelsundell/jobman
 
-#include "automator.h"
+#include "jobman.h"
 #include "dropfilter.h"
 #include "error.h"
 #include "eventfilter.h"
@@ -35,13 +35,13 @@
 
 // generated files
 #include "ui_about.h"
-#include "ui_automator.h"
+#include "ui_jobman.h"
 
-class AutomatorPrivate : public QObject
+class JobmanPrivate : public QObject
 {
     Q_OBJECT
     public:
-        AutomatorPrivate();
+        JobmanPrivate();
         void init();
         void stylesheet();
         void profile();
@@ -113,17 +113,17 @@ class AutomatorPrivate : public QObject
         bool createfolders;
         QMap<QString, QList<QUuid>> processedfiles;
         QPointer<Queue> queue;
-        QPointer<Automator> window;
+        QPointer<Jobman> window;
         QScopedPointer<About> about;
         QScopedPointer<Preferences> preferences;
         QScopedPointer<Monitor> monitor;
         QScopedPointer<Dropfilter> dropfilter;
         QScopedPointer<Eventfilter> presetfilter;
         QScopedPointer<Eventfilter> filedropfilter;
-        QScopedPointer<Ui_Automator> ui;
+        QScopedPointer<Ui_Jobman> ui;
 };
 
-AutomatorPrivate::AutomatorPrivate()
+JobmanPrivate::JobmanPrivate()
 : width(128)
 , height(128)
 {
@@ -131,7 +131,7 @@ AutomatorPrivate::AutomatorPrivate()
 }
 
 void
-AutomatorPrivate::init()
+JobmanPrivate::init()
 {
     mac::setDarkAppearance();
     // icc profile
@@ -143,7 +143,7 @@ AutomatorPrivate::init()
     // queue
     queue = Queue::instance();
     // ui
-    ui.reset(new Ui_Automator());
+    ui.reset(new Ui_Jobman());
     ui->setupUi(window);
     // about
     about.reset(new About(window.data()));
@@ -171,26 +171,26 @@ AutomatorPrivate::init()
     // progress
     ui->fileprogress->hide();
     // connect
-    connect(ui->togglePreset, &QPushButton::pressed, this, &AutomatorPrivate::togglePreset);
-    connect(ui->toggleFiledrop, &QPushButton::pressed, this, &AutomatorPrivate::toggleFiledrop);
+    connect(ui->togglePreset, &QPushButton::pressed, this, &JobmanPrivate::togglePreset);
+    connect(ui->toggleFiledrop, &QPushButton::pressed, this, &JobmanPrivate::toggleFiledrop);
     connect(presetfilter.data(), &Eventfilter::pressed, ui->togglePreset, &QPushButton::click);
     connect(filedropfilter.data(), &Eventfilter::pressed, ui->toggleFiledrop, &QPushButton::click);
-    connect(ui->addfiles, &QAction::triggered, this, &AutomatorPrivate::addFiles);
-    connect(ui->refreshPresets, &QPushButton::clicked, this, &AutomatorPrivate::refreshPresets);
-    connect(ui->openPreset, &QPushButton::clicked, this, &AutomatorPrivate::openPreset);
-    connect(ui->openPresetfrom, &QPushButton::clicked, this, &AutomatorPrivate::openPresetfrom);
-    connect(ui->openSaveto, &QPushButton::clicked, this, &AutomatorPrivate::openSaveto);
-    connect(ui->showSaveto, &QPushButton::clicked, this, &AutomatorPrivate::showSaveto);
-    connect(dropfilter.data(), &Dropfilter::textChanged, this, &AutomatorPrivate::saveToChanged);
-    connect(ui->createFolders, &QCheckBox::stateChanged, this, &AutomatorPrivate::createFolderChanged);
-    connect(ui->filedrop, &Filedrop::filesDropped, this, &AutomatorPrivate::run);
-    connect(ui->threads, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &AutomatorPrivate::threadsChanged);
-    connect(ui->monitor, &QPushButton::clicked, this, &AutomatorPrivate::showMonitor);
-    connect(ui->about, &QAction::triggered, this, &AutomatorPrivate::showAbout);
-    connect(ui->preferences, &QAction::triggered, this, &AutomatorPrivate::showPreferences);
-    connect(ui->openGithubReadme, &QAction::triggered, this, &AutomatorPrivate::openGithubReadme);
-    connect(ui->openGithubIssues, &QAction::triggered, this, &AutomatorPrivate::openGithubIssues);
-    connect(queue.data(), &Queue::jobProcessed, this, &AutomatorPrivate::jobProcessed);
+    connect(ui->addfiles, &QAction::triggered, this, &JobmanPrivate::addFiles);
+    connect(ui->refreshPresets, &QPushButton::clicked, this, &JobmanPrivate::refreshPresets);
+    connect(ui->openPreset, &QPushButton::clicked, this, &JobmanPrivate::openPreset);
+    connect(ui->openPresetfrom, &QPushButton::clicked, this, &JobmanPrivate::openPresetfrom);
+    connect(ui->openSaveto, &QPushButton::clicked, this, &JobmanPrivate::openSaveto);
+    connect(ui->showSaveto, &QPushButton::clicked, this, &JobmanPrivate::showSaveto);
+    connect(dropfilter.data(), &Dropfilter::textChanged, this, &JobmanPrivate::saveToChanged);
+    connect(ui->createFolders, &QCheckBox::stateChanged, this, &JobmanPrivate::createFolderChanged);
+    connect(ui->filedrop, &Filedrop::filesDropped, this, &JobmanPrivate::run);
+    connect(ui->threads, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &JobmanPrivate::threadsChanged);
+    connect(ui->monitor, &QPushButton::clicked, this, &JobmanPrivate::showMonitor);
+    connect(ui->about, &QAction::triggered, this, &JobmanPrivate::showAbout);
+    connect(ui->preferences, &QAction::triggered, this, &JobmanPrivate::showPreferences);
+    connect(ui->openGithubReadme, &QAction::triggered, this, &JobmanPrivate::openGithubReadme);
+    connect(ui->openGithubIssues, &QAction::triggered, this, &JobmanPrivate::openGithubIssues);
+    connect(queue.data(), &Queue::jobProcessed, this, &JobmanPrivate::jobProcessed);
     size = window->size();
     // threads
     int threads = QThread::idealThreadCount();
@@ -237,7 +237,7 @@ AutomatorPrivate::init()
 }
 
 void
-AutomatorPrivate::stylesheet()
+JobmanPrivate::stylesheet()
 { 
     QDir resources(QApplication::applicationDirPath());
     QFile stylesheet(resources.absolutePath() + "/../Resources/App.css");
@@ -273,7 +273,7 @@ AutomatorPrivate::stylesheet()
 }
 
 void
-AutomatorPrivate::profile()
+JobmanPrivate::profile()
 {
     QString outputProfile = mac::grabIccProfileUrl(window->winId());
     // icc profile
@@ -282,19 +282,19 @@ AutomatorPrivate::profile()
 }
 
 void
-AutomatorPrivate::activate()
+JobmanPrivate::activate()
 {
     enable(true);
 }
 
 void
-AutomatorPrivate::deactivate()
+JobmanPrivate::deactivate()
 {
     enable(false);
 }
 
 void
-AutomatorPrivate::addFiles()
+JobmanPrivate::addFiles()
 {
     QStringList filenames = QFileDialog::getOpenFileNames(
                                 window.data(),
@@ -311,7 +311,7 @@ AutomatorPrivate::addFiles()
 }
 
 void
-AutomatorPrivate::enable(bool enable)
+JobmanPrivate::enable(bool enable)
 {
     ui->openPreset->setEnabled(enable);
     ui->refreshPresets->setEnabled(enable);
@@ -320,7 +320,7 @@ AutomatorPrivate::enable(bool enable)
 }
 
 bool
-AutomatorPrivate::eventFilter(QObject* object, QEvent* event)
+JobmanPrivate::eventFilter(QObject* object, QEvent* event)
 {
     if (event->type() == QEvent::ScreenChangeInternal) {
         profile();
@@ -343,12 +343,12 @@ AutomatorPrivate::eventFilter(QObject* object, QEvent* event)
 }
 
 void
-AutomatorPrivate::loadSettings()
+JobmanPrivate::loadSettings()
 {
     QDir applicationPath(QApplication::applicationDirPath());
     QString documents = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
     QString presets = applicationPath.absolutePath() + "/../Presets";
-    QSettings settings(MACOSX_BUNDLE_GUI_IDENTIFIER, "Automator");
+    QSettings settings(MACOSX_BUNDLE_GUI_IDENTIFIER, "Jobman");
     filesfrom = settings.value("filesFrom", documents).toString();
     presetselected = settings.value("presetselected", "").toString();
     presetfrom = settings.value("presetFrom", presets).toString();
@@ -360,9 +360,9 @@ AutomatorPrivate::loadSettings()
 }
 
 void
-AutomatorPrivate::saveSettings()
+JobmanPrivate::saveSettings()
 {
-    QSettings settings(MACOSX_BUNDLE_GUI_IDENTIFIER, "Automator");
+    QSettings settings(MACOSX_BUNDLE_GUI_IDENTIFIER, "Jobman");
     settings.setValue("filesFrom", filesfrom);
     // presets
     if (ui->presets->count()) {
@@ -377,7 +377,7 @@ AutomatorPrivate::saveSettings()
 }
 
 void
-AutomatorPrivate::loadPresets()
+JobmanPrivate::loadPresets()
 {
     ui->presets->clear();
     QDir presets(presetfrom);
@@ -417,7 +417,7 @@ AutomatorPrivate::loadPresets()
 }
 
 QString
-AutomatorPrivate::replacePattern(const QString& input, const QString& pattern, const QFileInfo& fileinfo)
+JobmanPrivate::replacePattern(const QString& input, const QString& pattern, const QFileInfo& fileinfo)
 {
     QString result = input;
     QList<QPair<QString, QString>> replacements = {
@@ -433,13 +433,13 @@ AutomatorPrivate::replacePattern(const QString& input, const QString& pattern, c
 }
 
 QString
-AutomatorPrivate::replaceInput(const QString& input, const QFileInfo& inputinfo, const QFileInfo& outputinfo)
+JobmanPrivate::replaceInput(const QString& input, const QFileInfo& inputinfo, const QFileInfo& outputinfo)
 {
     return replacePattern(replacePattern(input, "input", inputinfo), "output", outputinfo);
 }
 
 void
-AutomatorPrivate::run(const QList<QString>& files)
+JobmanPrivate::run(const QList<QString>& files)
 {
     QSharedPointer<Preset> preset = ui->presets->currentData().value<QSharedPointer<Preset>>();
     QString outputDir = saveto;
@@ -529,7 +529,7 @@ AutomatorPrivate::run(const QList<QString>& files)
 }
 
 void
-AutomatorPrivate::jobProcessed(const QUuid& uuid)
+JobmanPrivate::jobProcessed(const QUuid& uuid)
 {
     bool found = false;
     QStringList files = processedfiles.keys();
@@ -558,13 +558,13 @@ AutomatorPrivate::jobProcessed(const QUuid& uuid)
 }
 
 void
-AutomatorPrivate::refreshPresets()
+JobmanPrivate::refreshPresets()
 {
     loadPresets();
 }
 
 void
-AutomatorPrivate::openPreset()
+JobmanPrivate::openPreset()
 {
     if (ui->presets->count()) {
         QSharedPointer<Preset> preset = ui->presets->currentData().value<QSharedPointer<Preset>>();
@@ -573,7 +573,7 @@ AutomatorPrivate::openPreset()
 }
 
 void
-AutomatorPrivate::openPresetfrom()
+JobmanPrivate::openPresetfrom()
 {
     QString dir = QFileDialog::getExistingDirectory(
                     window.data(),
@@ -588,7 +588,7 @@ AutomatorPrivate::openPresetfrom()
 }
 
 void
-AutomatorPrivate::openSaveto()
+JobmanPrivate::openSaveto()
 {
     QString dir = QFileDialog::getExistingDirectory(
                     window.data(),
@@ -603,38 +603,38 @@ AutomatorPrivate::openSaveto()
 }
 
 void
-AutomatorPrivate::showSaveto()
+JobmanPrivate::showSaveto()
 {
     QDesktopServices::openUrl(QUrl::fromLocalFile(saveto));
 }
 
 void
-AutomatorPrivate::setSaveto(const QString& text)
+JobmanPrivate::setSaveto(const QString& text)
 {
     QFontMetrics metrics(ui->saveTo->font());
     ui->saveTo->setText(metrics.elidedText(text, Qt::ElideRight, ui->saveTo->maximumSize().width()));
 }
 
 void
-AutomatorPrivate::saveToChanged(const QString& text)
+JobmanPrivate::saveToChanged(const QString& text)
 {
     saveto = text;
 }
 
 void
-AutomatorPrivate::createFolderChanged(int state)
+JobmanPrivate::createFolderChanged(int state)
 {
     createfolders = (state == Qt::Checked);
 }
 
 void
-AutomatorPrivate::threadsChanged(int index)
+JobmanPrivate::threadsChanged(int index)
 {
     queue->setThreads(ui->threads->itemText(index).toInt());
 }
 
 void
-AutomatorPrivate::togglePreset()
+JobmanPrivate::togglePreset()
 {
     int height = ui->presetWidget->height(); 
     if (ui->togglePreset->isChecked()) {
@@ -651,7 +651,7 @@ AutomatorPrivate::togglePreset()
 }
 
 void
-AutomatorPrivate::toggleFiledrop()
+JobmanPrivate::toggleFiledrop()
 {
     int height = ui->filedropWidget->height();
     if (ui->toggleFiledrop->isChecked()) {
@@ -668,7 +668,7 @@ AutomatorPrivate::toggleFiledrop()
 }
 
 void
-AutomatorPrivate::showMonitor()
+JobmanPrivate::showMonitor()
 {
     if (monitor->isVisible()) {
         monitor->raise();
@@ -678,43 +678,43 @@ AutomatorPrivate::showMonitor()
 }
 
 void
-AutomatorPrivate::showAbout()
+JobmanPrivate::showAbout()
 {
     about->exec();
 }
 
 void
-AutomatorPrivate::showPreferences()
+JobmanPrivate::showPreferences()
 {
     preferences->exec();
 }
 
 void
-AutomatorPrivate::openGithubReadme()
+JobmanPrivate::openGithubReadme()
 {
-    QDesktopServices::openUrl(QUrl("https://github.com/mikaelsundell/automator/blob/master/README.md"));
+    QDesktopServices::openUrl(QUrl("https://github.com/mikaelsundell/jobman/blob/master/README.md"));
 }
 
 void
-AutomatorPrivate::openGithubIssues()
+JobmanPrivate::openGithubIssues()
 {
-    QDesktopServices::openUrl(QUrl("https://github.com/mikaelsundell/automator/issues"));
+    QDesktopServices::openUrl(QUrl("https://github.com/mikaelsundell/jobman/issues"));
 }
 
-#include "automator.moc"
+#include "jobman.moc"
 
-Automator::Automator()
+Jobman::Jobman()
 : QMainWindow(nullptr,
   Qt::WindowTitleHint |
   Qt::CustomizeWindowHint |
   Qt::WindowCloseButtonHint |
   Qt::WindowMinimizeButtonHint)
-, p(new AutomatorPrivate())
+, p(new JobmanPrivate())
 {
     p->window = this;
     p->init();
 }
 
-Automator::~Automator()
+Jobman::~Jobman()
 {
 }

@@ -168,8 +168,8 @@
   </layout>
  </widget>
  <resources>
-  <include location="automator.qrc"/>
-  <include location="automator.qrc"/>
+  <include location="jobman.qrc"/>
+  <include location="jobman.qrc"/>
  </resources>
  <connections>
   <connection>

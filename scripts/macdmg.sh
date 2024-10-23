@@ -106,7 +106,7 @@ function deploy_dmg() {
 <plist version="1.0">
 <dict>
     <key>URL</key>
-    <string>https://github.com/mikaelsundell/automator</string>
+    <string>https://github.com/mikaelsundell/jobman</string>
 </dict>
 </plist>
 EOL

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Automator</class>
- <widget class="QMainWindow" name="Automator">
+ <class>Jobman</class>
+ <widget class="QMainWindow" name="Jobman">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Automator</string>
+   <string>Jobman</string>
   </property>
   <property name="dockOptions">
    <set>QMainWindow::AllowTabbedDocks|QMainWindow::AnimatedDocks</set>
@@ -80,7 +80,7 @@
             <string>Show or hide preset area</string>
            </property>
            <property name="icon">
-            <iconset resource="automator.qrc">
+            <iconset resource="jobman.qrc">
              <normaloff>:/icons/resources/Collapse.png</normaloff>:/icons/resources/Collapse.png</iconset>
            </property>
            <property name="checkable">
@@ -248,7 +248,7 @@
                <string>...</string>
               </property>
               <property name="icon">
-               <iconset resource="automator.qrc">
+               <iconset resource="jobman.qrc">
                 <normaloff>:/icons/resources/Open.png</normaloff>:/icons/resources/Open.png</iconset>
               </property>
               <property name="toolButtonStyle">
@@ -278,7 +278,7 @@
                <string>...</string>
               </property>
               <property name="icon">
-               <iconset resource="automator.qrc">
+               <iconset resource="jobman.qrc">
                 <normaloff>:/icons/resources/Folder.png</normaloff>:/icons/resources/Folder.png</iconset>
               </property>
              </widget>
@@ -344,7 +344,7 @@
                <string>...</string>
               </property>
               <property name="icon">
-               <iconset resource="automator.qrc">
+               <iconset resource="jobman.qrc">
                 <normaloff>:/icons/resources/File.png</normaloff>:/icons/resources/File.png</iconset>
               </property>
              </widget>
@@ -374,7 +374,7 @@
                <string>...</string>
               </property>
               <property name="icon">
-               <iconset resource="automator.qrc">
+               <iconset resource="jobman.qrc">
                 <normaloff>:/icons/resources/Refresh.png</normaloff>:/icons/resources/Refresh.png</iconset>
               </property>
               <property name="iconSize">
@@ -410,7 +410,7 @@
                <string>...</string>
               </property>
               <property name="icon">
-               <iconset resource="automator.qrc">
+               <iconset resource="jobman.qrc">
                 <normaloff>:/icons/resources/Folder.png</normaloff>:/icons/resources/Folder.png</iconset>
               </property>
              </widget>
@@ -546,7 +546,7 @@
             <string>...</string>
            </property>
            <property name="icon">
-            <iconset resource="automator.qrc">
+            <iconset resource="jobman.qrc">
              <normaloff>:/icons/resources/Collapse.png</normaloff>:/icons/resources/Collapse.png</iconset>
            </property>
            <property name="checkable">
@@ -800,7 +800,7 @@
                <string>...</string>
               </property>
               <property name="icon">
-               <iconset resource="automator.qrc">
+               <iconset resource="jobman.qrc">
                 <normaloff>:/icons/resources/Monitor.png</normaloff>:/icons/resources/Monitor.png</iconset>
               </property>
              </widget>
@@ -1131,7 +1131,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="automator.qrc"/>
+  <include location="jobman.qrc"/>
  </resources>
  <connections/>
  <designerdata>

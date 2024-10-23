@@ -1,9 +1,9 @@
-# Copyright 2022-present Contributors to the automator project.
+# Copyright 2022-present Contributors to the jobman project.
 # SPDX-License-Identifier: BSD-3-Clause
-# https://github.com/mikaelsundell/automator
+# https://github.com/mikaelsundell/jobman
 
 cmake_minimum_required( VERSION 3.27 )
-set( project_name "Automator" )
+set( project_name "Jobman" )
 
 project( ${project_name} )
 
@@ -19,8 +19,8 @@ find_package( Lcms2 REQUIRED )
 
 # sourcesld
 set (app_sources
-    automator.h
-    automator.cpp
+    jobman.h
+    jobman.cpp
     dropfilter.h
     dropfilter.cpp
     eventfilter.h
@@ -51,13 +51,13 @@ set (app_sources
     question.h
     question.cpp
     about.ui
-    automator.ui
+    jobman.ui
     error.ui
     monitor.ui
     question.ui
     preferences.ui
     progressbar.ui
-    automator.qrc
+    jobman.qrc
 )
 
 # resources
@@ -79,14 +79,14 @@ set (bundle_sources
 )
 
 if (APPLE)
-    set (MACOSX_BUNDLE_GUI_IDENTIFIER "com.github.mikaelsundell.automator")
+    set (MACOSX_BUNDLE_GUI_IDENTIFIER "com.github.mikaelsundell.jobman")
     set (MACOSX_BUNDLE_EXECUTABLE_NAME ${project_name})
     set (MACOSX_BUNDLE_INFO_STRING ${project_name})
     set (MACOSX_BUNDLE_BUNDLE_NAME ${project_name})
     set (MACOSX_BUNDLE_ICON_FILE AppIcon.icns)
     set (MACOSX_BUNDLE_LONG_VERSION_STRING "1.0.1")
     set (MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0")
-    set (MACOSX_BUNDLE_BUNDLE_VERSION "1.0")
+    set (MACOSX_BUNDLE_BUNDLE_VERSION ${MACOSX_BUNDLE_LONG_VERSION_STRING})
     set (MACOSX_BUNDLE_COPYRIGHT "Copyright 2022-present Contributors to the ${project_name} project")
     set (MACOSX_DEPLOYMENT_TARGET ${CMAKE_OSX_DEPLOYMENT_TARGET})
     set (CMAKE_XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS "-o linker-signed")
@@ -97,7 +97,7 @@ if (APPLE)
     add_definitions(-DMACOSX_BUNDLE_GUI_IDENTIFIER="${MACOSX_BUNDLE_GUI_IDENTIFIER}")
     add_definitions(-DMACOSX_BUNDLE_COPYRIGHT="${MACOSX_BUNDLE_COPYRIGHT}")
     add_definitions(-DMACOSX_BUNDLE_LONG_VERSION_STRING="${MACOSX_BUNDLE_LONG_VERSION_STRING}")
-    add_definitions(-DGITHUBURL="https://github.com/mikaelsundell/automator")
+    add_definitions(-DGITHUBURL="https://github.com/mikaelsundell/jobman")
     set_target_properties(${project_name} PROPERTIES
         XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${MACOSX_BUNDLE_GUI_IDENTIFIER}"
         XCODE_ATTRIBUTE_MACOSX_DEPLOYMENT_TARGET ${CMAKE_OSX_DEPLOYMENT_TARGET}

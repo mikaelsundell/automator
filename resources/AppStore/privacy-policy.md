@@ -1,8 +1,8 @@
-# Privacy policy Automator
+# Privacy policy Jobman
 
 ## What we Collect
 
-Automator does not collect any personal data. We only gather non-personal information, such as your device type and usage stats from the App Store, to help improve the app.
+Jobman does not collect any personal data. We only gather non-personal information, such as your device type and usage stats from the App Store, to help improve the app.
 
 ## How we use it
 
@@ -14,7 +14,7 @@ We use non-personal information to:
 
 ## Third party services
 
-Automator includes software developed by third parties. We fully acknowledge and respect their copyrights and terms of use. Below is a list of the libraries we use and their respective copyright notices:
+Jobman includes software developed by third parties. We fully acknowledge and respect their copyrights and terms of use. Below is a list of the libraries we use and their respective copyright notices:
 
 - **App icon:** Copyright flaticon.com
 - **Giflib:** Copyright (c) 1997 by Eric S. Raymond. All rights reserved.
@@ -35,4 +35,4 @@ We may update this policy from time to time. Any changes will be posted here and
 
 Got questions or concerns? Reach out to us at mikael.sundell@gmail.com.
 
-By using Automator, you agree to this policy.
+By using Jobman, you agree to this policy.
