@@ -1,7 +1,7 @@
 #!/bin/bash
-##  Copyright 2022-present Contributors to the automator project.
+##  Copyright 2022-present Contributors to the jobman project.
 ##  SPDX-License-Identifier: BSD-3-Clause
-##  https://github.com/mikaelsundell/automator
+##  https://github.com/mikaelsundell/jobman
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 machine_arch=$(uname -m)
@@ -13,7 +13,8 @@ sign_code=OFF
 mac_developer_identity=""
 mac_installer_identity=""
 
-sign_app() {
+# merge
+merge_app() {
     local bundle_path="$1"
     local merge_path="$2"
     local sign_type="$3"
@@ -30,8 +31,6 @@ sign_app() {
                         lipo -create "$file" "$merge_file" -output "$file.tmp"
                         mv "$file.tmp" "$file"
                     fi
-                    echo "signing dylib $file ..."
-                    codesign --force --sign "$sign_identity" --timestamp "$file"
                     echo ""
                 fi
             done
@@ -52,8 +51,6 @@ sign_app() {
                 else
                     echo -e "framework $merge_framework does not exist, will not be merged"
                 fi
-                echo "signing framework $framework ..."
-                codesign --force --sign "$sign_identity" --timestamp "$framework"
                 echo ""
             done
             ;;
@@ -67,8 +64,6 @@ sign_app() {
                         lipo -create "$file" "$merge_file" -output "$file.tmp"
                         mv "$file.tmp" "$file"
                     fi
-                    echo "signing executable $file with entitlements ..."
-                    codesign --force --sign "$sign_identity" --timestamp --options runtime --entitlements "$script_dir/resources/App.entitlements" "$file"
                     echo ""
                 fi
             done
@@ -80,22 +75,16 @@ sign_app() {
     esac
 }
 
-verify_app() {
+# permissions
+permission_app() {
     local bundle_path="$1"
     find "$bundle_path" -type f \( -name "*.dylib" -o -name "*.so" -o -name "*.bundle" -o -name "*.framework" -o -perm +111 \) | while read -r file; do
-        echo "verifying $file..."
-        if codesign --verify --verbose "$file"; then
-            echo "signature verification passed for $file"
-            echo "permissions updated for $file"
-            chmod o+r "$file"
-        else
-            echo "signature verification failed for $file"
-        fi
-                echo ""
+        echo "setting permissions for $file..."
+        chmod o+r "$file"
     done
 }
 
-# check signing
+# parse arguments
 parse_args() {
     while [[ "$#" -gt 0 ]]; do
         case $1 in
@@ -129,7 +118,7 @@ set -e
 # clear
 clear
 
-echo "Building Automator for universal"
+echo "Building Jobman for universal"
 echo "---------------------------------"
 
 # signing
@@ -161,8 +150,8 @@ if [ "$sign_code" == "ON" ]; then
     echo ""
 fi
 
-# build automator
-build_automator() {
+# build jobman
+build_jobman() {
     local build_app="$1"
     local arm64_app="$2"
     local x86_64_app="$3"
@@ -172,7 +161,7 @@ build_automator() {
         exit 1
     fi
 
-     pkg_file="$script_dir/Automator_macOS${major_version}_universal.pkg"
+    pkg_file="$script_dir/Jobman_macOS${major_version}_universal.pkg"
     if [ -f "$pkg_file" ]; then
         rm -f "$pkg_file"
     fi
@@ -189,25 +178,22 @@ build_automator() {
         fi
     fi
 
-    cp -RP "$arm64_app" "$build_app"
-    xattr -rc "$build_app"
-    
+    cp -RPp "$arm64_app" "$build_app"
+
     if [ -n "$mac_developer_identity" ]; then
         if [ "$sign_code" == "ON" ]; then
             # entitlements
             teamid=$(echo "$mac_developer_identity" | awk -F '[()]' '{print $2}')
-            echo 
             applicationid=$(/usr/libexec/PlistBuddy -c "Print CFBundleIdentifier" "$build_app/Contents/Info.plist")
             entitlements="resources/App.entitlements"
             echo sed -e "s/\${TEAMID}/$teamid/g" -e "s/\${APPLICATIONIDENTIFIER}/$applicationid/g" "$script_dir/resources/App.entitlements.in" > "$entitlements"
             sed -e "s/\${TEAMID}/$teamid/g" -e "s/\${APPLICATIONIDENTIFIER}/$applicationid/g" "$script_dir/resources/App.entitlements.in" > "$entitlements"
-            # sign
-            sign_app "$build_app" "$x86_64_app" "dylibs" "$mac_developer_identity"
-            sign_app "$build_app" "$x86_64_app" "frameworks" "$mac_developer_identity"
-            sign_app "$build_app" "$x86_64_app" "executables" "$mac_developer_identity"
-            verify_app "$build_app"
-            echo codesign --force --deep --sign "$mac_developer_identity" --entitlements $entitlements "$build_app"
-            codesign --force --deep --sign "$mac_developer_identity" --entitlements $entitlements "$build_app"
+            merge_app "$build_app" "$x86_64_app" "dylibs" "$mac_developer_identity"
+            merge_app "$build_app" "$x86_64_app" "frameworks" "$mac_developer_identity"
+            merge_app "$build_app" "$x86_64_app" "executables" "$mac_developer_identity"
+            permission_app "$build_app"
+            codesign --force --deep --sign "$mac_developer_identity" "$build_app"
+            codesign --force --sign "$mac_developer_identity" --entitlements $entitlements "$build_app/Contents/MacOS/Jobman"
             codesign --verify "$build_app"
         fi
     else 
@@ -217,6 +203,7 @@ build_automator() {
     # productbuild
     if [ "$sign_code" == "ON" ]; then
         if [ -n "$mac_installer_identity" ]; then
+            echo "Signing package with Mac installer identity"
             productbuild --component "$build_app" "/Applications" --sign "${mac_installer_identity}" --product "$build_app/Contents/Info.plist" "$pkg_file" 
         else 
             echo "Mac Installer identity must be set for appstore distribution, sign will be skipped."
@@ -227,4 +214,4 @@ build_automator() {
     fi
 }
 
-build_automator "${build_apps[@]}"
+build_jobman "${build_apps[@]}"

@@ -1,7 +1,7 @@
 #!/bin/bash
-##  Copyright 2022-present Contributors to the automator project.
+##  Copyright 2022-present Contributors to the jobman project.
 ##  SPDX-License-Identifier: BSD-3-Clause
-##  https://github.com/mikaelsundell/automator
+##  https://github.com/mikaelsundell/jobman
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 machine_arch=$(uname -m)
@@ -111,7 +111,7 @@ if [ "$build_type" != "debug" ] && [ "$build_type" != "release" ] && [ "$build_t
     exit 1
 fi
 
-echo "Building Automator for $build_type"
+echo "Building Jobman for $build_type"
 echo "---------------------------------"
 
 # signing
